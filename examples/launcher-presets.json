@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "builtins": ["shell", "codex", "claude"],
+  "presets": [
+    {
+      "id": "gemini",
+      "label": "Gemini",
+      "argv": ["agy"],
+      "agent_hint": "agy"
+    }
+  ]
+}

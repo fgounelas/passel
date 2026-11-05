@@ -1,0 +1,181 @@
+{
+  "cargo_overrides": {
+    "ratatui-core@0.1.0": [
+      "third-party/licenses/ratatui-0a2a7c0363-LICENSE.txt"
+    ],
+    "ratatui-crossterm@0.1.0": [
+      "third-party/licenses/ratatui-0a2a7c0363-LICENSE.txt"
+    ],
+    "ratatui-termwiz@0.1.0": [
+      "third-party/licenses/ratatui-0a2a7c0363-LICENSE.txt"
+    ],
+    "ratatui-widgets@0.3.0": [
+      "third-party/licenses/ratatui-0a2a7c0363-LICENSE.txt"
+    ],
+    "ratatui@0.30.0": [
+      "third-party/licenses/ratatui-0a2a7c0363-LICENSE.txt"
+    ],
+    "valuable@0.1.1": [
+      "third-party/licenses/valuable-LICENSE.txt"
+    ],
+    "vtparse@0.6.2": [
+      "third-party/licenses/vtparse-LICENSE.txt"
+    ],
+    "wasip3@0.4.0+wasi-0.3.0-rc-2026-01-06": [
+      "third-party/licenses/wasip3-LICENSE-MIT.txt"
+    ],
+    "wasm-encoder@0.244.0": [
+      "third-party/licenses/wasm-tools-LICENSE-MIT.txt"
+    ],
+    "wasmparser@0.244.0": [
+      "third-party/licenses/wasm-tools-LICENSE-MIT.txt"
+    ],
+    "wezterm-input-types@0.1.0": [
+      "third-party/licenses/wezterm-input-types-LICENSE.txt"
+    ],
+    "winapi-i686-pc-windows-gnu@0.4.0": [
+      "third-party/licenses/winapi-LICENSE-MIT.txt",
+      "third-party/licenses/winapi-LICENSE-APACHE.txt"
+    ],
+    "winapi-x86_64-pc-windows-gnu@0.4.0": [
+      "third-party/licenses/winapi-LICENSE-MIT.txt",
+      "third-party/licenses/winapi-LICENSE-APACHE.txt"
+    ],
+    "wit-component@0.244.0": [
+      "third-party/licenses/wasm-tools-LICENSE-MIT.txt"
+    ],
+    "wit-parser@0.244.0": [
+      "third-party/licenses/wasm-tools-LICENSE-MIT.txt"
+    ]
+  },
+  "components": [
+    {
+      "ecosystem": "font",
+      "license": "OFL-1.1 base font; MIT, Apache-2.0, CC-BY-4.0 and Unlicense glyph notices",
+      "name": "JetBrains Mono / Nerd Fonts glyphs",
+      "notices": [
+        "third-party/licenses/nerd-codicons-LICENSE.txt.txt",
+        "third-party/licenses/nerd-font-awesome-LICENSE.txt.txt",
+        "third-party/licenses/nerd-fonts-LICENSE.txt",
+        "third-party/licenses/nerd-glyph-attribution.txt",
+        "third-party/licenses/nerd-materialdesign-LICENSE.txt",
+        "third-party/licenses/nerd-octicons-LICENSE.txt",
+        "third-party/licenses/nerd-pomicons-LICENSE.txt",
+        "third-party/licenses/nerd-powerline-extra-LICENSE.txt",
+        "third-party/licenses/nerd-powerline-symbols-LICENSE.txt.txt",
+        "web/public/fonts/OFL.txt",
+        "third-party/licenses/font-logos-LICENSE.txt"
+      ],
+      "source": "https://github.com/ryanoasis/nerd-fonts/tree/v3.4.0",
+      "version": "2.304 / 3.4.0"
+    },
+    {
+      "ecosystem": "font",
+      "license": "OFL-1.1",
+      "name": "KaTeX fonts",
+      "notices": [
+        "third-party/licenses/katex-fonts-LICENSE.txt"
+      ],
+      "source": "katex@0.18.7/dist/fonts (embedded copyright and licence metadata)",
+      "version": "0.18.7"
+    },
+    {
+      "ecosystem": "wasm",
+      "license": "MIT",
+      "name": "Ghostty VT (ghostty-web WebAssembly)",
+      "notices": [
+        "third-party/licenses/ghostty-LICENSE.txt",
+        "third-party/licenses/zig-LICENSE.txt"
+      ],
+      "source": "https://github.com/ghostty-org/ghostty/tree/5714ed07a1012573261b7b7e3ed2add9c1504496",
+      "version": "5714ed07a1012573261b7b7e3ed2add9c1504496"
+    },
+    {
+      "ecosystem": "wasm",
+      "license": "MIT AND Unicode-3.0",
+      "name": "uucode Unicode tables and UTF-8 support",
+      "notices": [
+        "third-party/licenses/uucode-LICENSE.txt",
+        "third-party/licenses/uucode-unicode-LICENSE.txt",
+        "third-party/licenses/uucode-utf8-LICENSE.txt"
+      ],
+      "source": "https://github.com/jacobsandlund/uucode/tree/31655fba3c638229989cc524363ef5e3c7b580c1",
+      "version": "31655fba3c638229989cc524363ef5e3c7b580c1"
+    },
+    {
+      "ecosystem": "runtime",
+      "license": "MIT OR Apache-2.0; additional component licences in upstream standard-library copyright notices",
+      "name": "Rust standard library",
+      "notices": [
+        "third-party/licenses/rust-LICENSE-MIT.txt",
+        "third-party/licenses/rust-LICENSE-APACHE.txt",
+        "third-party/licenses/rust-stdlib-COPYRIGHT.txt"
+      ],
+      "source": "https://static.rust-lang.org/dist/rustc-1.99.1-aarch64-apple-darwin.tar.xz",
+      "version": "1.99.1"
+    },
+    {
+      "ecosystem": "native",
+      "license": "MIT AND Unicode-3.0",
+      "name": "uucode (Herdr native terminal)",
+      "notices": [
+        "third-party/licenses/uucode-native-LICENSE.md.txt",
+        "third-party/licenses/uucode-native-LICENSE_Bjoern_Hoehrmann.txt",
+        "third-party/licenses/uucode-native-LICENSE_unicode.txt"
+      ],
+      "source": "https://codeload.github.com/jacobsandlund/uucode/tar.gz/refs/tags/v0.2.0",
+      "version": "0.2.0"
+    },
+    {
+      "ecosystem": "native",
+      "license": "Apache-2.0 OR BSD-3-Clause",
+      "name": "Highway (Herdr native terminal)",
+      "notices": [
+        "third-party/licenses/highway-native-LICENSE.txt",
+        "third-party/licenses/highway-native-LICENSE-BSD3.txt"
+      ],
+      "source": "https://codeload.github.com/google/highway/tar.gz/66486a10623fa0d72fe91260f96c892e41aceb06",
+      "version": "66486a10623fa0d72fe91260f96c892e41aceb06"
+    },
+    {
+      "ecosystem": "native",
+      "license": "(Apache-2.0 OR MIT) AND BSD-3-Clause",
+      "name": "simdutf (Herdr native terminal)",
+      "notices": [
+        "third-party/licenses/simdutf-native-LICENSE-APACHE.txt",
+        "third-party/licenses/simdutf-native-LICENSE-MIT.txt",
+        "third-party/licenses/simdutf-native-TH-BSD.txt"
+      ],
+      "source": "https://codeload.github.com/simdutf/simdutf/tar.gz/refs/tags/v9.0.0",
+      "version": "9.0.0"
+    },
+    {
+      "ecosystem": "native",
+      "license": "MIT",
+      "name": "Ghostty VT (Herdr native terminal)",
+      "notices": [
+        "third-party/licenses/ghostty-native-LICENSE.txt",
+        "third-party/licenses/zig-LICENSE.txt"
+      ],
+      "source": "https://raw.githubusercontent.com/ghostty-org/ghostty/c5a21edfcbc2d5b46540ad91b7980aca31f5f1f3/LICENSE",
+      "version": "c5a21edfcbc2d5b46540ad91b7980aca31f5f1f3"
+    }
+  ],
+  "npm_overrides": {
+    "@uiw/color-convert@2.10.3": [
+      "third-party/licenses/uiw-react-color-LICENSE.txt"
+    ],
+    "@uiw/react-color-wheel@2.10.3": [
+      "third-party/licenses/uiw-react-color-LICENSE.txt"
+    ],
+    "@uiw/react-drag-event-interactive@2.10.3": [
+      "third-party/licenses/uiw-react-color-LICENSE.txt"
+    ],
+    "rehype-katex@7.0.1": [
+      "third-party/licenses/rehype-katex-LICENSE.txt"
+    ],
+    "remark-math@6.0.0": [
+      "third-party/licenses/remark-math-LICENSE.txt"
+    ]
+  }
+}

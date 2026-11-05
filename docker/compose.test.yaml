@@ -1,0 +1,7 @@
+# CI/developer override; production compose.yaml uses the prebuilt GHCR image.
+services:
+  passel:
+    ports: !override
+      - "127.0.0.1:${PASSEL_PORT:-8787}:8080"
+    environment:
+      PASSEL_ORIGIN: ${PASSEL_ORIGIN:-http://127.0.0.1:8787}
