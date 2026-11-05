@@ -1,0 +1,99 @@
+.app[data-files="open"], .app[data-files="open"][data-notes="open"] { grid-template-columns: min(var(--sidebar-w), 100%) minmax(0, 1fr) min(var(--files-w), 65vw, max(0px, calc(100% - var(--sidebar-w)))); }
+.app[data-files="open"][data-sidebar="closed"] { grid-template-columns: 0 minmax(0, 1fr) min(var(--files-w), 65vw); }
+.project-files { --border: var(--line); position: relative; grid-column: 3; grid-row: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; border-left: 1px solid var(--border); background: var(--app-bg); color: var(--text); z-index: 5; font-size: 13px; }
+.files-sidebar-content { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.files-sidebar-content[hidden], .sidebar .list[hidden], .sidebar .sidebar-scope[hidden] { display: none; }
+.files-browser { --border: var(--line); display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; font-size: 13px; }
+.files-browser .output-tree { flex: 1; max-height: none; min-height: 0; }
+.output-tree-container { display: flex; flex: 1; min-height: 0; }
+.output-tree-container[hidden] { display: none; }
+.output-entry svg, .output-tree-indent { flex: none; }
+.output-tree-indent { width: 12px; }
+.output-tree-name { flex: 1; min-width: 0; }
+.output-timestamp { flex: none; margin-left: auto; padding-left: 6px; color: var(--subtext0); font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.output-search-heading { display: flex; align-items: center; min-width: 0; }
+.output-entry[aria-selected="true"] { background: #80808035; }
+.output-entry:focus-visible { outline: 1px solid currentColor; outline-offset: -1px; }
+.output-tree-status { padding: 2px 20px; font-size: 11px; opacity: .7; }
+.output-search-result { flex-direction: column; align-items: stretch; gap: 3px; }
+.output-search-result small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files-browser .output-controls { gap: 5px; padding: 8px; }
+.files-browser .output-controls select { min-width: 0; max-width: 100%; }
+.files-browser .files-toolbar { flex-wrap: nowrap; gap: 4px; }
+.files-root-label { flex: none; font-size: 12px; }
+.files-toolbar .output-filter { flex: 1; min-width: 0; width: 0; margin: 0; padding: 5px; }
+.files-browser .files-toolbar button { flex: none; display: flex; align-items: center; justify-content: center; width: 26px; height: 28px; padding: 0; }
+.output-controls, .output-file-heading { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.output-controls button, .output-controls select, .output-controls input, .output-filter { padding: 5px 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--app-bg); color: inherit; }
+.output-controls button[aria-pressed="true"] { outline: 1px solid currentColor; }
+.output-controls button:disabled { opacity: .4; }
+.output-controls input[type="number"] { width: 56px; }
+.output-file-heading strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.output-file-heading { flex-wrap: nowrap; }
+.output-file-heading button { flex: none; }
+.output-file-heading a { flex: none; }
+.project-files a { color: #4d9be8; }
+.output-filter { margin: 4px 12px; }
+.output-tree { overflow: auto; min-height: 70px; max-height: 30%; padding: 4px 8px; flex: 0 1 auto; }
+.output-entry { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; border: 0; background: transparent; padding: 7px 4px; border-radius: 4px; }
+.output-entry span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.output-entry small { flex: none; opacity: .6; }
+.output-entry:hover, .output-entry[aria-pressed="true"] { background: #80808025; }
+.output-preview { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; border-top: 1px solid var(--border); }
+.output-document { overflow: auto; padding: 12px 18px; line-height: 1.65; }
+.output-document pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.output-document table { border-collapse: collapse; }
+.output-document td, .output-document th { border: 1px solid var(--border); padding: 5px; }
+.output-hint { opacity: .65; font-size: 11px; }
+.output-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 32px 24px; min-width: 0; text-align: center; }
+.output-empty-state p { margin: 0; max-width: 32ch; color: var(--subtext0); line-height: 1.6; overflow-wrap: anywhere; }
+.output-empty-state button { flex: none; width: auto; max-width: 100%; padding: 7px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface0); color: var(--text); cursor: pointer; }
+.output-empty { padding: 16px; }
+.output-pdf { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.output-pdf-scroll { flex: 1; overflow: auto; min-height: 0; padding: 12px; background: #555; }
+.output-pdf-page { position: relative; background: white; margin: 0 auto 12px; flex: none; }
+.output-pdf-page canvas { display: block; width: 100%; height: 100%; }
+.output-pdf[data-expanded="true"] { position: fixed; inset: 0; z-index: 1000; background: var(--app-bg); color: var(--text); }
+.output-pdf-toolbar { flex-wrap: nowrap; gap: 4px; padding: 8px; }
+.output-pdf-toolbar button { display: flex; align-items: center; justify-content: center; flex: none; padding: 5px; width: 30px; height: 30px; }
+.output-pdf-toolbar [role="status"] { max-width: 24%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-files:has(.output-pdf[data-expanded="true"]) { z-index: 1000; }
+.output-pdf-search input { flex: 1; min-width: 0; width: 120px; }
+.output-pdf-match { position: absolute; background: #ffed0066; pointer-events: none; }
+.output-pdf-match[data-active="true"] { background: #ff930088; outline: 1px solid #ff9300; }
+.output-resizer { position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; cursor: col-resize; touch-action: none; z-index: 6; }
+.output-resizer:hover, .output-resizer:focus { background: #4d9be866; }
+@media (max-width: 800px) {
+  .app[data-files="open"], .app[data-files="open"][data-notes="open"] { grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 0; }
+  .app[data-files="open"][data-sidebar="closed"] { grid-template-columns: 0 minmax(0, 1fr) 0; }
+  .project-files { position: fixed; inset: 0 0 0 auto; width: min(100vw, 600px); z-index: 100; }
+  .output-resizer { display: none; }
+}
+
+.output-upload-hint, .output-upload-status {
+  margin: 4px 8px;
+  font-size: 11px;
+  color: var(--subtext0);
+  overflow-wrap: anywhere;
+}
+.output-upload-status[role="alert"] { color: var(--red); }
+.output-upload-copy, .output-upload-cancel { align-self: flex-start; margin: 4px 8px; }
+
+/* Fact records are reading documents, with separate machine-readable metadata. */
+.output-fact { max-width: 76ch; margin-inline: auto; font-size: 15px; line-height: 1.8; overflow-wrap: anywhere; }
+.output-fact > p, .output-fact li { white-space: pre-line; }
+.output-fact > p { margin: 1em 0 1.4em; }
+.output-fact > h2 { margin: 1.7em 0 .65em; padding-bottom: .35em; border-bottom: 1px solid var(--line); font-size: 1.2em; line-height: 1.35; }
+.output-fact > h2::first-letter { text-transform: uppercase; }
+.output-fact .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding-block: .3em; }
+.output-fact pre { padding: 12px; background: var(--crust); border-radius: var(--r-sm); }
+.output-fact-details { margin-block: 4px 20px; font-size: 12px; line-height: 1.6; color: var(--subtext0); }
+.output-fact-details summary { cursor: pointer; padding-block: 6px; }
+.output-fact-details pre { white-space: pre-wrap; overflow-wrap: anywhere; margin-block: 8px; color: var(--text); }
+
+@media (min-width: 801px) {
+  .app[data-files="open"][data-session-hidden="true"] { grid-template-columns: min(var(--sidebar-w), 100%) 0 minmax(0, 1fr); }
+  .app[data-files="open"][data-session-hidden="true"][data-sidebar="closed"] { grid-template-columns: 0 0 minmax(0, 1fr); }
+  .app[data-session-hidden="true"] .output-resizer { display: none; }
+}
+.stage[hidden] { display: none; }

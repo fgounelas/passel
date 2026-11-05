@@ -1,0 +1,237 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web and release tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '24', '26']
+    env:
+      NODE_OPTIONS: --no-experimental-webstorage
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.11'
+      - run: npm ci
+      - run: npm ci --prefix web
+      - run: npm run lint:web
+      - run: npm run test:dev
+      - run: npm run test:release
+      - run: npm run test:packaging
+      - run: npm run test:notices
+      - run: npm run test:web
+      - run: npm run build:web
+
+  python:
+    name: Services and source checks (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.14']
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install vendor-check dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ripgrep
+      - run: bash scripts/check-vendor.sh
+      - run: python3 -m unittest discover -s conversation-service
+      - run: python3 -m unittest discover -s files-service
+      - run: python3 -m unittest discover -s usage-service
+      - run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - run: python3 scripts/source-release.py manifest --check
+      - run: python3 scripts/third-party-notices.py check
+      - name: Check every tracked file is reviewed
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          reviewed = set(json.loads(Path('SOURCE_MANIFEST.json').read_text())['files']) | {'SOURCE_MANIFEST.json'}
+          tracked = set(subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')) - {''}
+          if tracked != reviewed:
+              raise SystemExit('Tracked/source-manifest file mismatch: ' + ', '.join(sorted(tracked ^ reviewed)))
+          PY
+
+  rust:
+    name: Bridge (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          components: rustfmt
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          workspaces: |
+            bridge -> target
+            vendor/herdr-compat -> target
+      - run: cargo fmt --manifest-path bridge/Cargo.toml --check
+      - run: cargo fmt --manifest-path vendor/herdr-compat/Cargo.toml --check
+      - run: cargo test --locked --manifest-path vendor/herdr-compat/Cargo.toml
+      - run: cargo test --locked --manifest-path bridge/Cargo.toml --bin passel-bridge
+      - run: cargo build --locked --release --manifest-path bridge/Cargo.toml --bin passel-bridge
+      - run: bridge/target/release/passel-bridge --help
+
+  compose:
+    name: Container build and smoke (${{ matrix.arch }})
+    needs: [web, python]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    env:
+      COMPOSE_FILE: compose.yaml:docker/compose.test.yaml
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - run: docker compose -f compose.yaml config --quiet
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build the image from this commit
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: 'false'
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          pull: true
+          tags: ghcr.io/fgounelas/passel:latest
+          build-args: PASSEL_REVISION=${{ github.sha }}
+          cache-from: type=gha,scope=passel-${{ matrix.arch }}
+          cache-to: type=gha,scope=passel-${{ matrix.arch }},mode=max,ignore-error=true
+      - run: docker compose -p passel-smoke up -d --pull never --wait --wait-timeout 120
+      - run: python3 scripts/smoke-compose.py --project passel-smoke --install-clis
+      - name: Smoke with an external HTTPS origin and alternate port
+        env:
+          PASSEL_PORT: '8799'
+          PASSEL_ORIGIN: https://passel-smoke.example
+        run: |
+          docker compose -p passel-smoke-proxy up -d --pull never --wait --wait-timeout 120
+          python3 scripts/smoke-compose.py --project passel-smoke-proxy
+      - name: Push the tested architecture image
+        if: github.event_name != 'pull_request' && github.repository == 'fgounelas/passel'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.repository_owner }}
+          PASSEL_ARCH: ${{ matrix.arch }}
+          PASSEL_PRIVATE_REPO: ${{ github.event.repository.private }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from urllib.error import HTTPError
+          from urllib.request import Request, urlopen
+          request = Request('https://api.github.com/users/fgounelas/packages/container/passel',
+                            headers={'Authorization': 'Bearer ' + os.environ['GHCR_TOKEN'],
+                                     'Accept': 'application/vnd.github+json'})
+          try:
+              with urlopen(request, timeout=20) as response:
+                  package = json.load(response)
+          except HTTPError as error:
+              if error.code != 404:
+                  raise SystemExit('Cannot verify package access: HTTP ' + str(error.code))
+          else:
+              if os.environ['PASSEL_PRIVATE_REPO'] == 'true' and package['visibility'] != 'private':
+                  raise SystemExit('Refusing to publish private source to a non-private package')
+              repository = package.get('repository') or {}
+              if repository and repository.get('full_name') != 'fgounelas/passel':
+                  raise SystemExit('The package belongs to a different repository')
+          PY
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USER" --password-stdin
+          docker tag ghcr.io/fgounelas/passel:latest "ghcr.io/fgounelas/passel:sha-${GITHUB_SHA}-${PASSEL_ARCH}"
+          docker push "ghcr.io/fgounelas/passel:sha-${GITHUB_SHA}-${PASSEL_ARCH}"
+      - name: Compose diagnostics
+        if: failure()
+        run: |
+          docker compose -p passel-smoke ps -a
+          docker compose -p passel-smoke logs --tail=100
+          docker compose -p passel-smoke-proxy ps -a
+          docker compose -p passel-smoke-proxy logs --tail=100
+      - name: Remove disposable Compose projects
+        if: always()
+        run: |
+          docker compose -p passel-smoke down --volumes --remove-orphans
+          docker compose -p passel-smoke-proxy down --volumes --remove-orphans
+
+  publish-image:
+    name: Publish multi-architecture GHCR image
+    needs: compose
+    if: github.event_name != 'pull_request' && github.repository == 'fgounelas/passel'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GHCR_USER: ${{ github.repository_owner }}
+    steps:
+      - name: Publish only after both architectures pass
+        shell: bash
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USER" --password-stdin
+          tags=("sha-${GITHUB_SHA}")
+          if [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            tags+=(latest)
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            tags+=("$GITHUB_REF_NAME")
+          fi
+          for tag in "${tags[@]}"; do
+            docker manifest create "ghcr.io/fgounelas/passel:${tag}" \
+              "ghcr.io/fgounelas/passel:sha-${GITHUB_SHA}-amd64" \
+              "ghcr.io/fgounelas/passel:sha-${GITHUB_SHA}-arm64"
+            docker manifest push "ghcr.io/fgounelas/passel:${tag}"
+          done
+          docker manifest inspect "ghcr.io/fgounelas/passel:sha-${GITHUB_SHA}"

@@ -1,0 +1,14 @@
+services:
+  passel:
+    image: ghcr.io/fgounelas/passel:latest
+    restart: unless-stopped
+    volumes:
+      - data:/home/passel
+    ports:
+      - "127.0.0.1:8787:8080"
+    # Set the exact browser address when using a reverse proxy:
+    # environment:
+    #   PASSEL_ORIGIN: https://passel.example.org
+
+volumes:
+  data:

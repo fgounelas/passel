@@ -1,0 +1,36 @@
+{
+  "name": "Passel",
+  "short_name": "Passel",
+  "description": "Research conversations, papers and notes in one workspace",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#11111b",
+  "theme_color": "#11111b",
+  "icons": [
+    {
+      "src": "/passel-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/passel-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/passel-icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/passel-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

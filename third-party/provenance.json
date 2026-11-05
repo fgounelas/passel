@@ -1,0 +1,199 @@
+[
+  {
+    "path": "third-party/licenses/font-logos-LICENSE.txt",
+    "sha256": "88d9b4eb60579c191ec391ca04c16130572d7eedc4a86daa58bf28c6e14c9bcd",
+    "url": "https://raw.githubusercontent.com/lukas-w/font-logos/v1.3.0/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/ghostty-LICENSE.txt",
+    "sha256": "386211873e5b7a02f663ae4d7adf96285999f91608f8f9f31fecfd0f4095e6f1",
+    "url": "https://raw.githubusercontent.com/ghostty-org/ghostty/5714ed07a1012573261b7b7e3ed2add9c1504496/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/ghostty-native-LICENSE.txt",
+    "sha256": "386211873e5b7a02f663ae4d7adf96285999f91608f8f9f31fecfd0f4095e6f1",
+    "url": "https://raw.githubusercontent.com/ghostty-org/ghostty/c5a21edfcbc2d5b46540ad91b7980aca31f5f1f3/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/highway-native-LICENSE-BSD3.txt",
+    "sha256": "d25e82e26acd42ca3ccc9993622631163425b869b9e16284226d534cff6470f2",
+    "source_sha256": "87d4f8893ef4e08f224973608ffebf94268a81380ba79c12e8841968c80aa212",
+    "url": "https://codeload.github.com/google/highway/tar.gz/66486a10623fa0d72fe91260f96c892e41aceb06!/highway-66486a10623fa0d72fe91260f96c892e41aceb06/LICENSE-BSD3"
+  },
+  {
+    "path": "third-party/licenses/highway-native-LICENSE.txt",
+    "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+    "source_sha256": "87d4f8893ef4e08f224973608ffebf94268a81380ba79c12e8841968c80aa212",
+    "url": "https://codeload.github.com/google/highway/tar.gz/66486a10623fa0d72fe91260f96c892e41aceb06!/highway-66486a10623fa0d72fe91260f96c892e41aceb06/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/nerd-codicons-LICENSE.txt.txt",
+    "sha256": "d6239afa918961b465b07bf7411cbe34ff6685854f58553db7966f4881a0211f",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/src/glyphs/codicons/LICENSE.txt"
+  },
+  {
+    "path": "third-party/licenses/nerd-font-awesome-LICENSE.txt.txt",
+    "sha256": "de784a808496d49f5f80dd9d1d6e9a51cff712cfbc339e7c25155631ae3cdb5d",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/src/glyphs/font-awesome/LICENSE.txt"
+  },
+  {
+    "path": "third-party/licenses/nerd-fonts-LICENSE.txt",
+    "sha256": "1f6ad4edae6479aaace3112ede5279a23284ae54b2a34db66357aef5f64df160",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/nerd-materialdesign-LICENSE.txt",
+    "sha256": "3bae6305bcaa6d10219b999f65c342034c2d40b1c0e8567fa08605e73ccba829",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/src/glyphs/materialdesign/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/nerd-octicons-LICENSE.txt",
+    "sha256": "4f886642f9e8d99eeadd484acdac011c3fde8a338faf52f5ca1408c13b9a9b63",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/src/glyphs/octicons/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/nerd-pomicons-LICENSE.txt",
+    "sha256": "cb4797a9745683f287c28833db596e9d68ec43082d59359b3a49c504f0f610ce",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/src/glyphs/pomicons/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/nerd-powerline-extra-LICENSE.txt",
+    "sha256": "544307a58e6826c24145b2af1c3578b53e2e21ae0e6c67ab4c6abd544304d26a",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/src/glyphs/powerline-extra/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/nerd-powerline-symbols-LICENSE.txt.txt",
+    "sha256": "46d5355e4734468135d8e4a30d0916292cc4df2b3ec30aa68c866f82497933be",
+    "url": "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/src/glyphs/powerline-symbols/LICENSE.txt"
+  },
+  {
+    "path": "third-party/licenses/ratatui-0a2a7c0363-LICENSE.txt",
+    "sha256": "50eb43e8d742c9c61a9391e42b2184fce54dbd1893a1bb1c85b8c9ee217ab1f5",
+    "url": "https://raw.githubusercontent.com/ratatui/ratatui/0a2a7c0363a4806b0cf05c1915bf7cdd438f756c/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/rehype-katex-LICENSE.txt",
+    "sha256": "cb992262f361a5359e6771c28740d33c7041e15332ae8537fae40538992591a9",
+    "url": "https://raw.githubusercontent.com/remarkjs/remark-math/rehype-katex@7.0.1/license"
+  },
+  {
+    "path": "third-party/licenses/remark-math-LICENSE.txt",
+    "sha256": "cb992262f361a5359e6771c28740d33c7041e15332ae8537fae40538992591a9",
+    "url": "https://raw.githubusercontent.com/remarkjs/remark-math/d5d0660b150810a535bbb07eac6cc96a4510aa24/license"
+  },
+  {
+    "path": "third-party/licenses/rust-LICENSE-APACHE.txt",
+    "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+    "source_sha256": "23948a0a9c162fd2952defb3fb0462c44e8fcfd1a4ab8a274a1e1bdb2cf810a3",
+    "url": "https://static.rust-lang.org/dist/2026-10-15/rustc-1.99.1-aarch64-apple-darwin.tar.xz!/rustc-1.99.1-aarch64-apple-darwin/LICENSE-APACHE"
+  },
+  {
+    "path": "third-party/licenses/rust-LICENSE-MIT.txt",
+    "sha256": "b71bd43a069ca0641a9ecfe585ca7b3c53b5cc1608f8b68321168698e28b5ea1",
+    "source_sha256": "23948a0a9c162fd2952defb3fb0462c44e8fcfd1a4ab8a274a1e1bdb2cf810a3",
+    "url": "https://static.rust-lang.org/dist/2026-10-15/rustc-1.99.1-aarch64-apple-darwin.tar.xz!/rustc-1.99.1-aarch64-apple-darwin/LICENSE-MIT"
+  },
+  {
+    "path": "third-party/licenses/rust-stdlib-COPYRIGHT.txt",
+    "sha256": "fce0d9afed14774cb9cc79c7c1e392f1405781862969258639476f4cdd1a1b5f",
+    "source_sha256": "23948a0a9c162fd2952defb3fb0462c44e8fcfd1a4ab8a274a1e1bdb2cf810a3",
+    "transform": "HTML body converted to plain text; legal text retained",
+    "url": "https://static.rust-lang.org/dist/2026-10-15/rustc-1.99.1-aarch64-apple-darwin.tar.xz!/rustc-1.99.1-aarch64-apple-darwin/rustc/share/doc/rust/COPYRIGHT-library.html"
+  },
+  {
+    "path": "third-party/licenses/simdutf-native-LICENSE-APACHE.txt",
+    "sha256": "3d34610fc6b5e1b0bfe4e2f36171c2d62c28ef05cb8d704f5a0073be41a43b3d",
+    "source_sha256": "fd2ce975f29809a975a8da8843cfb3a7265af3f71be548f199d23cf65e101764",
+    "url": "https://codeload.github.com/simdutf/simdutf/tar.gz/refs/tags/v9.0.0!/simdutf-9.0.0/LICENSE-APACHE"
+  },
+  {
+    "path": "third-party/licenses/simdutf-native-LICENSE-MIT.txt",
+    "sha256": "fc8dbc04e03ad4efc08a647ffe7f995b811a95bc04c0e85a56d5277c6593fa5f",
+    "source_sha256": "fd2ce975f29809a975a8da8843cfb3a7265af3f71be548f199d23cf65e101764",
+    "url": "https://codeload.github.com/simdutf/simdutf/tar.gz/refs/tags/v9.0.0!/simdutf-9.0.0/LICENSE-MIT"
+  },
+  {
+    "path": "third-party/licenses/simdutf-native-TH-BSD.txt",
+    "sha256": "bb3e69be7f31322e7d585bc7d9cb9a0f6a34fc448ff9093775b09a3314a215f7",
+    "source_sha256": "d3501fc2143f0edc5c84e6bb013a7fdb8ccd95514f7fd0816669248e62676301",
+    "url": "https://github.com/herdrdev/herdr/blob/9eb521456ac0d19d3ab3d9d7cea3cca10baa8a4c/vendor/libghostty-vt/pkg/simdutf/vendor/simdutf.h#L967"
+  },
+  {
+    "path": "third-party/licenses/uiw-react-color-LICENSE.txt",
+    "sha256": "fd1f049b3bb5cbaf5143516b72dbc6805cd30cca0cda94edb37160e37662fd17",
+    "url": "https://raw.githubusercontent.com/uiwjs/react-color/v2.10.3/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/uucode-LICENSE.txt",
+    "sha256": "04de0e934432d28ec02715a632500878df804cbae5ecb1332d38ff858275bc78",
+    "url": "https://raw.githubusercontent.com/jacobsandlund/uucode/31655fba3c638229989cc524363ef5e3c7b580c1/LICENSE.md"
+  },
+  {
+    "path": "third-party/licenses/uucode-native-LICENSE.md.txt",
+    "sha256": "312e901e142be2477b4ca859e9311f9e3f80d33372991759b7921c1893605f33",
+    "source_sha256": "d0abee0f4f8bd6eae3c051777e16e7c42d8964aaaa015591c4e565703f465f95",
+    "url": "https://codeload.github.com/jacobsandlund/uucode/tar.gz/refs/tags/v0.2.0!/uucode-0.2.0/LICENSE.md"
+  },
+  {
+    "path": "third-party/licenses/uucode-native-LICENSE_Bjoern_Hoehrmann.txt",
+    "sha256": "de219cece932aad5a817bf763393d8d149d378a15d2ad5320e3331eac07626dd",
+    "source_sha256": "d0abee0f4f8bd6eae3c051777e16e7c42d8964aaaa015591c4e565703f465f95",
+    "url": "https://codeload.github.com/jacobsandlund/uucode/tar.gz/refs/tags/v0.2.0!/uucode-0.2.0/licenses/LICENSE_Bjoern_Hoehrmann"
+  },
+  {
+    "path": "third-party/licenses/uucode-native-LICENSE_unicode.txt",
+    "sha256": "1eda5a3b026870c737b22e8bcd4954338612c790db688242e003f41a4fa95175",
+    "source_sha256": "d0abee0f4f8bd6eae3c051777e16e7c42d8964aaaa015591c4e565703f465f95",
+    "url": "https://codeload.github.com/jacobsandlund/uucode/tar.gz/refs/tags/v0.2.0!/uucode-0.2.0/licenses/LICENSE_unicode"
+  },
+  {
+    "path": "third-party/licenses/uucode-unicode-LICENSE.txt",
+    "sha256": "1eda5a3b026870c737b22e8bcd4954338612c790db688242e003f41a4fa95175",
+    "url": "https://raw.githubusercontent.com/jacobsandlund/uucode/31655fba3c638229989cc524363ef5e3c7b580c1/licenses/LICENSE_unicode"
+  },
+  {
+    "path": "third-party/licenses/uucode-utf8-LICENSE.txt",
+    "sha256": "de219cece932aad5a817bf763393d8d149d378a15d2ad5320e3331eac07626dd",
+    "url": "https://raw.githubusercontent.com/jacobsandlund/uucode/31655fba3c638229989cc524363ef5e3c7b580c1/licenses/LICENSE_Bjoern_Hoehrmann"
+  },
+  {
+    "path": "third-party/licenses/valuable-LICENSE.txt",
+    "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+    "url": "https://raw.githubusercontent.com/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE"
+  },
+  {
+    "path": "third-party/licenses/vtparse-LICENSE.txt",
+    "sha256": "37db33bbbd7348969eda397b89a16f252d56c1ca7481b6ccaf56ccdcbab5dcca",
+    "url": "https://raw.githubusercontent.com/wez/wezterm/edeae72b5fc55c7fa4aa1d08bbefd08c5493f757/LICENSE.md"
+  },
+  {
+    "path": "third-party/licenses/wasip3-LICENSE-MIT.txt",
+    "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+    "url": "https://raw.githubusercontent.com/bytecodealliance/wasi-rs/06ce201370fcde0d1b0d47cac8ecb1b0b312c9f9/LICENSE-MIT"
+  },
+  {
+    "path": "third-party/licenses/wasm-tools-LICENSE-MIT.txt",
+    "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+    "url": "https://raw.githubusercontent.com/bytecodealliance/wasm-tools/d4e317f22c3bace76cb3205003bcc34b4929037d/LICENSE-MIT"
+  },
+  {
+    "path": "third-party/licenses/wezterm-input-types-LICENSE.txt",
+    "sha256": "37db33bbbd7348969eda397b89a16f252d56c1ca7481b6ccaf56ccdcbab5dcca",
+    "url": "https://raw.githubusercontent.com/wez/wezterm/d5ca5509b95edc31291ba29bd1fcbf3f0b12c92d/LICENSE.md"
+  },
+  {
+    "path": "third-party/licenses/winapi-LICENSE-APACHE.txt",
+    "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "url": "https://raw.githubusercontent.com/retep998/winapi-rs/0.3.9/LICENSE-APACHE"
+  },
+  {
+    "path": "third-party/licenses/winapi-LICENSE-MIT.txt",
+    "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "url": "https://raw.githubusercontent.com/retep998/winapi-rs/0.3.9/LICENSE-MIT"
+  },
+  {
+    "path": "third-party/licenses/zig-LICENSE.txt",
+    "sha256": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+    "url": "https://raw.githubusercontent.com/ziglang/zig/0.15.2/LICENSE"
+  }
+]

@@ -1,0 +1,11 @@
+# Source archives also omit operational material; this does not sanitize Git history.
+/deployments export-ignore
+/docs/private export-ignore
+/docs/HANDOFF-*.md export-ignore
+/docs/*-plan.md export-ignore
+/docs/conversation-view-content.md export-ignore
+/docs/terminal-display-investigation.md export-ignore
+/docs/project-pause.md export-ignore
+/docs/images export-ignore
+/.release-prep export-ignore
+/.release-private-patterns.json export-ignore

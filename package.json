@@ -1,0 +1,32 @@
+{
+  "name": "passel",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "npm run dev --prefix web",
+    "build:web": "npm run build --prefix web",
+    "test:dev": "node --test scripts/dev.test.mjs",
+    "test:release": "node --test scripts/release.test.mjs",
+    "test:packaging": "node --test scripts/package-tarball.test.mjs",
+    "test:notices": "node --test scripts/prepare-web-notices.test.mjs",
+    "notices:check": "python3 scripts/third-party-notices.py check",
+    "notices:generate": "python3 scripts/third-party-notices.py generate",
+    "test:source": "python3 -m unittest discover -s scripts -p 'test_*.py'",
+    "test:services": "python3 -m unittest discover -s conversation-service && python3 -m unittest discover -s files-service && python3 -m unittest discover -s usage-service",
+    "source:manifest": "python3 scripts/source-release.py manifest",
+    "source:check": "python3 scripts/source-release.py manifest --check",
+    "test:web": "npm run test --prefix web",
+    "lint:web": "npm run lint --prefix web",
+    "vendor:check": "scripts/check-vendor.sh",
+    "bridge:fmt": "cargo fmt --manifest-path bridge/Cargo.toml --check && cargo fmt --manifest-path vendor/herdr-compat/Cargo.toml --check",
+    "bridge:build": "cargo build --manifest-path bridge/Cargo.toml --bin passel-bridge",
+    "bridge:test": "cargo test --manifest-path vendor/herdr-compat/Cargo.toml && cargo test --manifest-path bridge/Cargo.toml --bin passel-bridge",
+    "package:tarball": "scripts/package-tarball.sh",
+    "build": "npm run build:web && npm run bridge:build",
+    "test": "npm run test:dev && npm run test:release && npm run test:packaging && npm run test:notices && npm run test:web && npm run test:source && npm run test:services && npm run bridge:test",
+    "lint": "npm run lint:web && npm run bridge:fmt",
+    "check": "npm run vendor:check && npm run notices:check && npm run lint && npm run test && npm run build && npm run source:check"
+  }
+}
