@@ -1,5 +1,6 @@
 import { previousPrompt } from "./conversationNavigation";
 import { ConversationChoice } from "./ConversationChoice";
+import { LoginLink } from "./LoginLink";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useId } from "react";
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import { ArrowDown, ArrowUp, Bookmark, CircleX, MoreVertical, X } from "lucide-react";
@@ -35,6 +36,7 @@ const MessageBody = memo(function MessageBody({ text, highlight = "" }: { text: 
 
 export function ConversationView({ paneId, bridgeId, agentStatus = "unknown", searchOpen = false, onCloseSearch = () => {}, pinsOpen = false, onPinsOpenChange = () => {} }: { paneId: string; bridgeId: string; agentStatus?: AgentStatus; searchOpen?: boolean; onCloseSearch?: () => void; pinsOpen?: boolean; onPinsOpenChange?: (open: boolean) => void }) {
   const [choiceActive, setChoiceActive] = useState(false);
+  const [loginUrl, setLoginUrl] = useState<string | null>(null);
   const [pinPage, setPinPage] = useState<PinPage>({pins: [], ids: [], hasMore: false, nextOffset: 0});
   const [pinOffset, setPinOffset] = useState(0);
   const [pinRevision, setPinRevision] = useState(0);
@@ -496,13 +498,13 @@ export function ConversationView({ paneId, bridgeId, agentStatus = "unknown", se
       }}>
       <div className="conversation-content">
         {historyBusy && <p className="conversation-hint" role="status">Loading history…</p>}
-        {(error || data?.status !== "ok") && <p className="conversation-hint" role="status">{error ? "Updates disconnected. Retrying…" : !data ? "Loading conversation…" : data.status === "stale" ? "Conversation updates are temporarily unavailable." : choiceActive ? "The agent is waiting for your input below." : "No supported conversation is attached to this pane."}</p>}
+        {!loginUrl && (error || data?.status !== "ok") && <p className="conversation-hint" role="status">{error ? "Updates disconnected. Retrying…" : !data ? "Loading conversation…" : data.status === "stale" ? "Conversation updates are temporarily unavailable." : choiceActive ? "The agent is waiting for your input below." : "No supported conversation is attached to this pane."}</p>}
         {historyError && <p role="alert">{historyError}</p>}
         {searchedText && <p className="conversation-hint" role="status">{searching ? "Searching saved conversation…" :
           `${messages.length} matching messages for “${searchedText}”${searchCursor !== null ? " · more available" : ""}`}</p>}
         {searchedText && searchCursor !== null && !searching && <button type="button" onClick={() => void search(searchCursor, searchedText)}>Next results</button>}
         {history && !searchedText && <p className="conversation-hint">Saved conversation history · {history.hasEarlier ? "earlier messages" : "beginning of session"}</p>}
-        {data?.status === "ok" && messages.length === 0 && <p>{data.awaitingFirstMessage ?
+        {!loginUrl && data?.status === "ok" && messages.length === 0 && <p>{data.awaitingFirstMessage ?
           "The agent is connected. Send a message below to start the conversation." : "No conversation messages yet."}</p>}
         {(history ? messages : readingWindow(messages.slice(-limit), "end").messages).map(message => <article key={message.id} data-message-id={message.id} className="conversation-message" data-role={message.role} tabIndex={-1} data-jump-target={jumpMessageId === message.id}>
 
@@ -522,6 +524,7 @@ export function ConversationView({ paneId, bridgeId, agentStatus = "unknown", se
           <MessageBody text={entry.text} />
           {entry.unconfirmed && <p className="conversation-hint">It may still be queued. Check Terminal before sending again.</p>}
         </article>)}
+        {loginUrl && <LoginLink url={loginUrl} />}
     {showWorking && <section className="conversation-activity" aria-label="Current worker activity">
       <div className="conversation-activity-label" role="status">Working…</div>
       <div key={data?.activity?.id ?? "pending"} className="conversation-activity-preview" tabIndex={0} aria-label="Latest command and output">
@@ -531,7 +534,7 @@ export function ConversationView({ paneId, bridgeId, agentStatus = "unknown", se
     </section>}
       </div>
     </div>
-    <ConversationChoice key={paneId} pane={paneId} onActive={setChoiceActive} />
+    <ConversationChoice key={paneId} pane={paneId} onActive={setChoiceActive} onLogin={setLoginUrl} />
     <form className="conversation-composer" onSubmit={event => { event.preventDefault(); void send(); }}>
       <textarea ref={composer} aria-label="Reply to conversation" placeholder="Write a reply…" value={draft}
         disabled={sending || choiceActive} maxLength={16000} onChange={event => setDraft(event.target.value)}

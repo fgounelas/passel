@@ -21,11 +21,11 @@ function fixture() {
   };
   return { host, send, mouse, touch, cleanup, disable: () => { enabled = false; } };
 }
-it("forwards exactly one primary press/release at the displayed cell and blocks local link/selection handlers", () => {
+it("defers an application click until release, allowing local selection to start", () => {
   const f = fixture(); const local = vi.fn(); f.host.addEventListener("mousedown", local);
-  f.mouse("mousedown"); f.mouse("mouseup"); f.mouse("click");
+  f.mouse("mousedown"); expect(f.send).not.toHaveBeenCalled(); f.mouse("mouseup"); f.mouse("click");
   expect(f.send.mock.calls).toEqual([["\x1b[<0;100;1M"], ["\x1b[<0;100;1m"]]);
-  expect(local).not.toHaveBeenCalled();
+  expect(local).toHaveBeenCalledOnce();
 });
 it("preserves Shift selection, secondary context menus and shell clicks; ignores outside pixels", () => {
   const f = fixture();
@@ -65,4 +65,15 @@ it("does not turn a stationary long press into an application click", () => {
   f.touch("touchstart"); now.mockReturnValue(600); f.touch("touchend");
   f.mouse("mousedown"); f.mouse("mouseup"); f.mouse("click");
   expect(f.send).not.toHaveBeenCalled();
+});
+
+it("keeps drags local, including leaving and returning to the starting cell", () => {
+  const f = fixture(); const up = vi.fn(); document.addEventListener("mouseup", up);
+  try {
+    f.mouse("mousedown"); f.mouse("mousemove", { clientX: 180 });
+    f.mouse("mousemove"); f.mouse("mouseup"); f.mouse("click");
+    expect(f.send).not.toHaveBeenCalled(); expect(up).toHaveBeenCalledOnce();
+    f.mouse("mousedown"); f.mouse("mouseup", { clientY: 100 });
+    expect(f.send).not.toHaveBeenCalled();
+  } finally { document.removeEventListener("mouseup", up); }
 });

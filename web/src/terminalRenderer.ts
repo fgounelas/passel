@@ -1,4 +1,6 @@
 import { installTerminalMouse } from "./terminalMouse";
+import { claudeLoginLink } from "./claudeLogin";
+import { installTerminalSelectionCopy } from "./terminalCopy";
 import { DEFAULT_APPEARANCE, terminalAppearance } from "./appearancePrefs";
 import { installLiveTerminalColors } from "./terminalThemeColors";
 import type { AppearancePrefs } from "./appearancePrefs";
@@ -106,6 +108,7 @@ type TerminalSelectionEndpoint = {
   absoluteRow: number;
 };
 type GhosttySelectionManagerAccess = {
+  getSelection?: () => string;
   selectionStart: TerminalSelectionEndpoint | null;
   selectionEnd: TerminalSelectionEndpoint | null;
   getSelectionCoords(): { startRow: number; endRow: number } | null;
@@ -171,6 +174,7 @@ export class GhosttyRenderer implements TerminalRenderer {
   #terminal: Terminal | null = null;
   #mouseCapture = false;
   #mouseCleanup: (() => void) | null = null;
+  #selectionCopyCleanup: (() => void) | null = null;
   #inputCallback: ((data: string) => void) | null = null;
   #fitAddon: FitAddon | null = null;
   #container: HTMLElement | null = null;
@@ -234,8 +238,11 @@ export class GhosttyRenderer implements TerminalRenderer {
         terminal, () => this.#requestRender(terminal),
       );
     }
+    this.#selectionCopyCleanup = installTerminalSelectionCopy(container, terminalSelectionManager(terminal), () => terminalLoginLink(terminal)?.url);
     terminal.attachCustomKeyEventHandler((event) =>
-      handleTerminalCustomKeyEvent(event, terminal),
+      handleTerminalCustomKeyEvent(event, terminal, navigator.platform, () => {
+        if (!document.execCommand("copy")) void navigator.clipboard?.writeText(terminal.getSelection()).catch(() => {});
+      }),
     );
     terminal.textarea?.blur();
     container.blur();
@@ -251,6 +258,13 @@ export class GhosttyRenderer implements TerminalRenderer {
       enabled: () => this.#mouseCapture && this.#isCurrentTerminal(terminal) && terminal.getViewportY() === 0,
       send: data => this.#inputCallback?.(data),
       focus: () => this.focusTextInput(),
+      clearSelection: () => {
+        terminal.clearSelection();
+        // Ghostty considers a one-cell selection empty, but still copies it
+        // on mouseup. Clear its endpoints before forwarding a stationary click.
+        const selection = terminalSelectionManager(terminal);
+        if (selection) { selection.selectionStart = null; selection.selectionEnd = null; }
+      },
     });
     this.#installScrollHandlers();
     this.#installMobileInputBridge();
@@ -447,6 +461,8 @@ export class GhosttyRenderer implements TerminalRenderer {
     this.#mouseCapture = false;
     this.#mouseCleanup?.();
     this.#mouseCleanup = null;
+    this.#selectionCopyCleanup?.();
+    this.#selectionCopyCleanup = null;
     this.#inputCallback = null;
     this.#disposed = true;
     this.#renderInteractionCleanup?.();
@@ -1279,7 +1295,11 @@ export class GhosttyRenderer implements TerminalRenderer {
           TOUCH_SELECTION_TOLERANCE_PX;
       mouseDownX = null;
       mouseDownY = null;
-      if (moved) {
+      if (moved || event.shiftKey) {
+        // Ghostty also has a bubbling link handler. A selection gesture must
+        // never fall through to it and open the link the user is copying.
+        event.preventDefault();
+        event.stopImmediatePropagation();
         return;
       }
       const linkText = mouseLinkText(event);
@@ -1794,12 +1814,12 @@ export function handleTerminalCustomKeyEvent(
   event: KeyboardEvent,
   terminal: Pick<Terminal, "getSelection" | "input">,
   platform = typeof navigator === "undefined" ? "" : navigator.platform,
+  copySelection?: () => void,
 ) {
   if (isImeComposingKeyEvent(event)) {
     return false;
   }
-  // Ghostty copies the canonical selection on mouseup. Consume the matching
-  // desktop copy shortcut here so its input handler cannot also emit ^C.
+  // Copy explicitly as well as on mouseup; never turn a copy shortcut into ^C.
   const consumesSelectionCopy =
     isTerminalSelectionCopyShortcut(event, platform) && terminal.getSelection().length > 0;
   const output = customKeyboardEventOutput(event);
@@ -1813,6 +1833,7 @@ export function handleTerminalCustomKeyEvent(
   if (output) {
     terminal.input(output, true);
   }
+  if (consumesSelectionCopy) copySelection?.();
   return true;
 }
 
@@ -2020,11 +2041,26 @@ function terminalBufferLineCellText(
   return text;
 }
 
-function terminalLinkAt(terminal: Terminal, position: TerminalCellPosition) {
+function terminalLoginLink(terminal: Terminal) {
+  return claudeLoginLink(Array.from({length: Math.min(terminal.rows, 200)}, (_, i) => {
+    const visible = terminal.buffer.active.getLine(terminalBufferRow(terminal, i));
+    return visible ? terminalBufferLineText(visible).text : "";
+  }));
+}
+
+export function terminalLinkAt(terminal: Terminal, position: TerminalCellPosition) {
   const row = terminalBufferRow(terminal, position.row);
   const line = terminal.buffer.active.getLine(row) as TerminalBufferLine | undefined;
   if (!line || position.col < 0 || position.col >= line.length) {
     return null;
+  }
+
+  // Ink/Claude explicitly line-wraps login URLs, including in the middle of
+  // OAuth state/challenge values. Reconstruct only a recognized live prompt.
+  const login = terminalLoginLink(terminal);
+  if (login && position.row >= login.firstRow && position.row <= login.lastRow) {
+    const text = terminalBufferLineText(line).text;
+    if (position.col >= text.length - text.trimStart().length && position.col < text.trimEnd().length) return login.url;
   }
 
   const cell = line.getCell(position.col);

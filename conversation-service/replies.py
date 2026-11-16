@@ -79,9 +79,12 @@ def send_reply(body, discover, request=api_request):
     # Browser choice polling can lag behind a newly opened prompt. Do not type a
     # normal reply/Enter into an approval or question, including while scrolled up.
     from choices import CHOICE, claude_approval
+    from login_prompt import claude_login_url
     read = request('pane.read', {'pane_id': pane, 'source': 'detection',
                                'lines': 80, 'format': 'text', 'strip_ansi': True})['read']
     screen = read['text'][-12000:]
+    if expected_agent == 'claude' and claude_login_url(screen):
+        raise ReplyError(409, 'Complete Claude sign-in before sending a conversation reply.')
     if CHOICE.search(screen) or claude_approval(screen):
         raise ReplyError(409, 'A question or approval is open. Use its choices or check Terminal before sending.')
     # Literal text and one Enter in the same daemon call. No terminal attach,

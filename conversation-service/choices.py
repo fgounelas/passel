@@ -5,6 +5,7 @@ import time
 from replies import ReplyError, api_request
 from tab_lifecycle import identity
 import claude
+from login_prompt import claude_login_url
 
 CHOICE = re.compile(r'queued follow.up inputs|(?:alt|⌥).*↑.*answer|question \d+\s*(?:/|of)\s*\d+|enter (?:to )?(?:submit|select|confirm)|esc to cancel', re.I)
 
@@ -65,8 +66,6 @@ def inspect_choice(pane, request=api_request):
             continue
         try:
             proc = identity(process['pid'], pane) if agent == 'codex' else identity(process['pid'], pane, agent)
-            if agent == 'claude' and not claude.match_session(proc['profile'], str(process['pid']), proc['start'], proc['cwd']):
-                continue
             candidates.append((process, proc))
         except (ReplyError, OSError, ValueError, KeyError):
             continue
@@ -80,6 +79,15 @@ def inspect_choice(pane, request=api_request):
     # Approval/questions sit at the bottom; long output above must not crop them.
     text = read['text'][-12000:].strip()
     if agent == 'claude':
+        login_url = claude_login_url(text)
+        if login_url:
+            token = f"{process['pid']}:{proc['start']}"
+            return {'active': True, 'provider': 'claude', 'kind': 'login', 'loginUrl': login_url,
+                    'token': token, 'frame': hashlib.sha256((token + login_url).encode()).hexdigest(),
+                    'text': 'Complete Claude sign-in in your browser.', 'isOpen': True,
+                    'canNavigate': False, 'canAnswer': False}
+        if not claude.match_session(proc['profile'], str(process['pid']), proc['start'], proc['cwd']):
+            return {'active': False}
         approval = claude_approval(text)
         if not approval:
             return {'active': False}
@@ -111,6 +119,8 @@ def choice_request(body, request=api_request):
     state = inspect_choice(body['pane'], request)
     if action == 'inspect':
         return state
+    if state.get('kind') == 'login':
+        raise ReplyError(409, 'Complete sign-in in your browser. Use Terminal if Claude asks for a code.')
     if not state.get('active') or state['token'] != body['token'] or (action in ('select', 'answer', 'choose') and state['frame'] != body['frame']):
         raise ReplyError(409, 'The choice prompt changed. Review it before choosing again.')
     if state.get('provider') == 'claude' and action in ('open', 'answer', 'main'):

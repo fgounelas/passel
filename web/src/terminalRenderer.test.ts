@@ -102,6 +102,11 @@ describe("terminal renderer font refresh", () => {
 });
 
 describe("terminal selection copy shortcuts", () => {
+  it("copies again on Cmd+C without sending input to the application", () => {
+    const terminal = terminalInput("selected text"), copy = vi.fn();
+    expect(handleTerminalCustomKeyEvent(keyEvent({ metaKey: true }), terminal, "MacIntel", copy)).toBe(true);
+    expect(copy).toHaveBeenCalledOnce(); expect(terminal.input).not.toHaveBeenCalled();
+  });
   it("consumes Windows/Linux Ctrl+C when canonical terminal selection text exists", () => {
     const terminal = terminalInput("selected terminal text");
 
@@ -169,3 +174,25 @@ function dispatchCtrlC(
   }
   return handled;
 }
+
+it('opens the entire hard-wrapped login URL from any row, without opening surrounding prose',async()=>{
+  const {terminalLinkAt}=await import('./terminalRenderer');
+  const url='https://claude.com/cai/oauth/authorize?client_id=test-client&response_type=code&code_challenge=ABCDEFGHIJKLMNOPQRSTUVWXYZ&state=abcdefghijklmnopqrstuvwxyz';
+  const rows=["Browser didn't open? Use the url below to sign in:",'',...url.match(/.{1,50}/g)!.map(s=>'  '+s),'','Paste code here if prompted >'];
+  const terminal = {
+    rows: rows.length,
+    getScrollbackLength: () => 0,
+    getViewportY: () => 0,
+    buffer: {active: {getLine: (row: number) => ({
+      length: 55,
+      getCell: (col: number) => ({
+        getCodepoint: () => rows[row]?.charCodeAt(col) || 32,
+        getWidth: () => 1,
+        getHyperlinkId: () => 0,
+      }),
+    })}},
+  } as never;
+  for(let row=2;row<rows.length-2;row++)expect(terminalLinkAt(terminal,{row,col:4})).toBe(url);
+  expect(terminalLinkAt(terminal,{row:0,col:4})).toBeNull();
+  expect(terminalLinkAt(terminal,{row:2,col:0})).toBeNull();
+});

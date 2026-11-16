@@ -57,3 +57,19 @@ it('offers an answer field instead of inactive choice arrows for an open text qu
     expect(fetcher).toHaveBeenCalledTimes(2);
   }finally{await act(async()=>root.unmount());host.remove();vi.unstubAllGlobals();}
 });
+it('reports a transient login URL to the conversation without rendering a separate control panel',async()=>{
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.useFakeTimers();
+  const url='https://claude.com/cai/oauth/authorize?client_id=test&response_type=code&state=synthetic&code_challenge=synthetic';
+  const state={active:true,provider:'claude',kind:'login',loginUrl:url,token:'1:2',frame:'f',text:'Sign in'};
+  const fetcher=vi.fn().mockResolvedValueOnce({ok:true,json:async()=>state}).mockRejectedValue(new Error('disconnected'));vi.stubGlobal('fetch',fetcher);
+  const host=document.createElement('div');document.body.append(host);const root=createRoot(host);
+  const onLogin=vi.fn(), onActive=vi.fn();
+  try {
+    await act(async()=>root.render(<ConversationChoice pane="login-pane" onLogin={onLogin} onActive={onActive}/>));
+    expect(onLogin).toHaveBeenLastCalledWith(url);expect(onActive).toHaveBeenLastCalledWith(true);
+    expect(host.innerHTML).toBe('');
+    await act(async()=>vi.advanceTimersByTimeAsync(3000));
+    expect(onLogin).toHaveBeenLastCalledWith(null);expect(onActive).toHaveBeenLastCalledWith(false);
+    expect(fetcher.mock.calls.every(call=>JSON.parse(call[1].body).action==='inspect')).toBe(true);
+  } finally {await act(async()=>root.unmount());host.remove();vi.useRealTimers();vi.unstubAllGlobals();}
+});

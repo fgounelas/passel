@@ -12,10 +12,11 @@ type MouseSurface = {
   enabled(): boolean;
   send(data: string): void;
   focus?(): void;
+  clearSelection?(): void;
 };
 
 export function installTerminalMouse(host: HTMLElement, surface: MouseSurface) {
-  let pressed: { col: number; row: number } | null = null;
+  let pressed: { col: number; row: number; x: number; y: number; moved: boolean } | null = null;
   let touch: { x: number; y: number; moved: boolean; startedAt: number } | null = null;
   let suppressMouseUntil = 0;
   const cell = (x: number, y: number) => {
@@ -31,16 +32,22 @@ export function installTerminalMouse(host: HTMLElement, surface: MouseSurface) {
   const down = (event: MouseEvent) => {
     if (performance.now() < suppressMouseUntil) { consume(event); return; }
     if (!surface.enabled() || event.button !== 0 || event.shiftKey) return;
-    pressed = cell(event.clientX, event.clientY);
-    if (!pressed) return;
-    consume(event); surface.focus?.(); report(pressed, false, event.altKey, event.ctrlKey);
+    const position = cell(event.clientX, event.clientY);
+    if (!position) return;
+    // Let Ghostty start a selection; only stationary clicks reach the app.
+    pressed = { ...position, x: event.clientX, y: event.clientY, moved: false };
+  };
+  const moveMouse = (event: MouseEvent) => {
+    if (pressed && Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) > 5) pressed.moved = true;
   };
   const up = (event: MouseEvent) => {
     if (!pressed || event.button !== 0) return;
-    const position = cell(event.clientX, event.clientY) ?? pressed;
+    const pending = pressed;
     pressed = null;
-    consume(event);
-    if (surface.enabled()) report(position, true, event.altKey, event.ctrlKey);
+    if (pending.moved || Math.hypot(event.clientX - pending.x, event.clientY - pending.y) > 5 || event.shiftKey || !surface.enabled()) return;
+    surface.clearSelection?.(); surface.focus?.();
+    report(pending, false, event.altKey, event.ctrlKey);
+    report(cell(event.clientX, event.clientY) ?? pending, true, event.altKey, event.ctrlKey);
   };
   const click = (event: MouseEvent) => {
     if (performance.now() < suppressMouseUntil || (surface.enabled() && event.button === 0 && !event.shiftKey && cell(event.clientX, event.clientY))) consume(event);
@@ -64,6 +71,7 @@ export function installTerminalMouse(host: HTMLElement, surface: MouseSurface) {
   };
   const cancel = () => { touch = null; pressed = null; };
   host.addEventListener("mousedown", down, true);
+  document.addEventListener("mousemove", moveMouse, true);
   document.addEventListener("mouseup", up, true);
   host.addEventListener("click", click, true);
   host.addEventListener("dblclick", click, true);
@@ -75,6 +83,7 @@ export function installTerminalMouse(host: HTMLElement, surface: MouseSurface) {
   return () => {
     cancel();
     host.removeEventListener("mousedown", down, true);
+    document.removeEventListener("mousemove", moveMouse, true);
     document.removeEventListener("mouseup", up, true);
     host.removeEventListener("click", click, true);
     host.removeEventListener("dblclick", click, true);

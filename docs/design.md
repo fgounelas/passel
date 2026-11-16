@@ -416,6 +416,13 @@ actual visual verification when reporting results.
   Conversation composer. Open choices sends Alt+Up; arrows, Select and Back act
   only on an open question. Never auto-select, retry a submission, or replay keys.
   Revalidate the foreground process and displayed prompt before selection.
+- Claude sign-in links appear as ordinary, selectable assistant text in the
+  Conversation reading column, including before a transcript exists. Do not add
+  a separate login panel, copy button or Terminal overlay. Require the owned
+  foreground Claude process; remove this transient text when the prompt disappears
+  or cannot be refreshed. Never save it in history, pins or browser storage.
+  Authentication codes stay in Terminal. Drag selection, keyboard copy and native
+  context-menu copy preserve the complete wrapped authorization URL.
 - Claude command approvals use the same persistent panel, with the command
   context and numbered option buttons. Clicking an option stages navigation,
   checks that the same command/process is still pending and that option is selected,
@@ -443,7 +450,9 @@ actual visual verification when reporting results.
 - Forward primary clicks and stationary taps only when the attached application
   requests mouse capture. Map the displayed canvas to the server's cell grid;
   send one press/release pair for taps, suppress duplicate compatibility clicks,
-  and leave swipes with scrolling. Shift-click retains local text selection.
+  and leave swipes with scrolling. On desktop, defer app presses until mouseup:
+  stationary clicks reach the app, while drags select local text without sending
+  app input or opening links. Shift-click also retains local text selection.
   Keep application mouse state separate from snapshot VT resets and clear it
   on disconnect. Do not add an application-specific overlay for native buttons.
 
