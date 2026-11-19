@@ -15,8 +15,20 @@ status hook; `usage-service/install.py` installs a per-user heartbeat and preser
 existing settings. Read the installer before running it: it modifies that user's
 crontab and optionally adds a Claude hook.
 
-The UI shows actual provider windows, reset times and freshness. Missing data is
-not zero. Credits and banked resets appear only when the provider reports them.
+The collector checks Codex usage about every five minutes. Claude Code supplies
+subscription limits in its [status line](https://code.claude.com/docs/en/statusline)
+after responses, so idle panes may hold older samples. The browser reads the
+server cache every 30 seconds while visible. **Refresh** checks that same
+cache immediately and reports whether a newer sample was available.
+
+For standard Claude subscription panes, the observer reads the signed-in profile
+email through `claude auth status`, at most once every five minutes. It leaves the
+label generic when the pane can override authentication or the CLI cannot confirm
+the default profile. The identity check does not request usage or send a prompt.
+
+The UI shows actual provider allowance and marks stale readings. Missing data is
+not zero. Claude links to its usage page for credits and resets. Codex can show
+reported credit balances, reset times and banked resets.
 Redeeming a reset requires an explicit account-labelled confirmation, server
 revalidation and a persisted idempotency key; retries reuse that same attempt.
 Nothing resumes a worker or consumes a reset automatically.

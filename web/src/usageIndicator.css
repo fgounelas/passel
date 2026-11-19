@@ -8,7 +8,10 @@
 .usage-note { opacity: .65; }
 .usage-details button { color: inherit; background: transparent; border: 1px solid var(--line); padding: 6px 8px; border-radius: 4px; }
 .usage-reset { display: grid; gap: 4px; margin: 10px 0; }
-.usage-reset button { justify-self: start; }
+.usage-actions, .usage-reset-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.usage-actions { margin-bottom: 4px; justify-content: space-between; }
+.usage-details .usage-reset-actions button { padding: 3px 6px; }
+.usage-details-claude .usage-window { margin: 8px 0; }
 .usage-details a { color: var(--blue); }
 
 .usage-indicator .usage-summary-compact { display: none; }

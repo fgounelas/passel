@@ -13,6 +13,46 @@ function quota(): Quota {
     bankedResets: {availableCount: 1, credits: [{id: "one", title: "Banked weekly reset", status: "available", resetType: "codexRateLimits",
       expiresAt: Date.now() / 1000 + 86400, expiryKnown: true}]}};
 }
+it("reports a manual check against an unchanged Claude sample and picks up fresh samples automatically", async () => {
+  vi.useFakeTimers();
+  let sample: Quota = {provider: "claude", account: "claude@example.test", profile: "Default Claude",
+    status: "ok", observedAt: Date.now() / 1000 - 3600, windows: [
+      {bucket: "claude", minutes: 10080, remaining: 55, resetsAt: null},
+      {bucket: "claude", minutes: 300, remaining: 80, resetsAt: null},
+    ]};
+  const response = () => new Response(JSON.stringify(sample));
+  const fetcher = vi.fn(async () => response());
+  vi.stubGlobal("fetch", fetcher);
+  const host = document.createElement("div"); document.body.append(host); const root = createRoot(host);
+  try {
+    await act(async () => root.render(<UsageIndicator paneId="pane" />));
+    const badge = host.querySelector("summary")!;
+    expect(badge.getAttribute("aria-label")).toContain("55% remaining (stale)");
+    const details = host.querySelector(".usage-details")!;
+    expect(details.querySelector("strong")?.textContent).toBe("claude@example.test");
+    expect(details.querySelectorAll("meter")).toHaveLength(2);
+    expect(details.textContent).not.toMatch(/profile allowance|Last observed|Reset time not reported/);
+    expect(details.textContent).toContain("See remaining credits and resets");
+    let finish!: (value: Response) => void;
+    fetcher.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const refresh = host.querySelector<HTMLButtonElement>(".usage-details button")!;
+    await act(async () => refresh.click());
+    expect(refresh.disabled).toBe(true);
+    expect(refresh.textContent).toBe("Checking…");
+    await act(async () => finish(response()));
+    expect(host.querySelector('[role="status"]')?.textContent).toBe("No newer usage sample reported.");
+    expect(badge.getAttribute("aria-label")).toContain("55% remaining (stale)");
+    fetcher.mockRejectedValueOnce(new Error("disconnected"));
+    await act(async () => refresh.click());
+    expect(host.querySelector('[role="status"]')?.textContent).toBe("Couldn’t check usage. Try again.");
+    expect(badge.getAttribute("aria-label")).toContain("55% remaining (stale)");
+    sample = {...sample, observedAt: Date.now() / 1000, windows: [{...sample.windows[0], remaining: 50}]};
+    await act(async () => vi.advanceTimersByTimeAsync(30000));
+    expect(badge.getAttribute("aria-label")).toContain("50% remaining.");
+    expect(host.querySelector('[role="status"]')?.textContent).toBe("");
+  } finally { await act(async () => root.unmount()); vi.useRealTimers(); }
+});
+
 it("dismisses usage on an outside click, focus or Escape while retaining inside interactions", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(quota()))));
   const host = document.createElement("div"); document.body.append(host); const root = createRoot(host);
@@ -53,6 +93,10 @@ it("portals mobile usage outside the pane, adapts to the visible viewport and ke
     await act(async () => { details.open = true; details.dispatchEvent(new Event("toggle")); });
     const panel = document.body.querySelector<HTMLDivElement>(".usage-details-mobile")!;
     expect(panel).not.toBeNull(); expect(panel.parentElement).toBe(document.body); expect(host.contains(panel)).toBe(false);
+    const reset = panel.querySelector(".usage-reset-actions")!;
+    expect(reset.querySelector("button")?.textContent).toBe("Use reset");
+    expect(reset.querySelector("small")?.textContent).toMatch(/^Expires /);
+    expect(panel.textContent).not.toMatch(/Reported by the provider|Last observed|every 5 minutes/);
     expect(panel.style.width).toBe("360px"); expect(panel.style.left).toBe("15px");
     viewport.height = 280; viewport.offsetTop = 90;
     await act(async () => viewport.dispatchEvent(new Event("resize")));
@@ -79,7 +123,9 @@ it("shows credits and reset expiry, confirms before using one, and displays prov
   const host = document.createElement("div"); document.body.append(host); const root = createRoot(host);
   try {
     await act(async () => root.render(<UsageIndicator paneId="pane" />));
-    expect(host.textContent).toContain("150.5 remaining"); expect(host.textContent).toContain("Expires");
+    expect(host.textContent).toContain("Credits: 150");
+    expect(host.textContent).not.toMatch(/150\.5|\b1 available/);
+    expect(host.textContent).toContain("Expires");
     await act(async () => [...host.querySelectorAll("button")].find(b => b.textContent === "Use reset")!.click());
     const dialog = host.querySelector('[role="dialog"]')!;
     expect(dialog.textContent).toContain("account@example.test"); expect(dialog.textContent).toContain("cannot be undone");
@@ -130,7 +176,8 @@ it("handles count-only resets and sends no redemption for Claude or unknown acco
     expect([...host.querySelectorAll<HTMLButtonElement>("button")].find(b => b.textContent === "Use next available reset")?.disabled).toBe(true);
     value = {provider: "claude", status: "ok", windows: []};
     await act(async () => root.render(<UsageIndicator key="claude" paneId="claude" />));
-    expect(host.textContent).toContain("Credit balance not reported by Claude Code");
+    expect(host.textContent).toContain("Claude · current session");
+    expect(host.textContent).not.toContain("Banked resets");
     expect(host.querySelector('a[href="https://claude.ai/settings/usage"]')).not.toBeNull();
     expect(host.textContent).not.toContain("0 available");
   } finally { await act(async () => root.unmount()); }

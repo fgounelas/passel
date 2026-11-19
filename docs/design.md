@@ -141,15 +141,22 @@ this document when an intentional design decision changes these conventions.
   percentage among the provider's primary allowances. Tap for provider, windows,
   resets and freshness details. Keep the full accessible label; mark stale values
   with an asterisk. Desktop retains its descriptive labels.
-- Usage details include provider-reported credit balances and banked-reset counts,
-  with local expiry dates when available. Unknown differs from zero; list/count
-  truncation must remain visible. A reset needs an explicit account-labelled
+- Usage details show credit balances inline and list banked resets with local
+  expiry dates when available. Omit the standalone reset count. Keep incomplete
+  reset inventories visible. A reset needs an explicit account-labelled
   confirmation, server revalidation and one persisted idempotency key per attempt.
   Never redeem automatically, infer restored quota or restart a worker. Refresh
   actual provider limits afterward. For providers without supported wallet/reset
   APIs, offer their official Usage page instead of inventing balances or resets.
   Keep same-attempt retry inside the reset confirmation; omit a separate previous-
   attempt action from the usage popover.
+- The Claude popover shows one account heading, the reported allowance meters,
+  Refresh, and a link to Claude usage for credits and resets. Use the signed-in
+  profile email when available. In Codex, place each banked reset's expiry beside
+  its button and allow the row to wrap on narrow screens.
+- Refresh rereads the server's latest usage sample immediately and reports when
+  no newer sample is available. Preserve the last reading and mark it stale if a
+  check fails.
 - Usage popovers dismiss on outside pointer/focus and Escape. Inside controls stay
   usable; a separate reset confirmation keeps its own focus/cancel behaviour.
   Escape returns focus to the badge when focus was inside the popover.

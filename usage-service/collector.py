@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import selectors
+import shutil
 import signal
 import stat
 import subprocess
@@ -22,6 +23,12 @@ PROFILES = {
     str(Path.home() / 'work/danus/runtime/codex-home'): 'Danus Codex',
     str(Path.home() / 'work/danus-mine/runtime/codex-home'): 'Danus Mine Codex',
 }
+CLAUDE_AUTH_ENV = frozenset({
+    'ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_BASE_URL', 'ANTHROPIC_CUSTOM_HEADERS',
+    'ANTHROPIC_PROFILE', 'ANTHROPIC_FEDERATION_RULE_ID', 'ANTHROPIC_ORGANIZATION_ID',
+    'CLAUDE_CODE_OAUTH_TOKEN', 'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX',
+    'CLAUDE_CODE_USE_FOUNDRY', 'CLAUDE_CONFIG_DIR', 'CLAUDE_CODE_SIMPLE',
+})
 
 def atomic_json(path, data):
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -221,6 +228,74 @@ def claude_cache_path(pid, start_time):
     identity = hashlib.sha256(f'{pid}:{start_time}'.encode()).hexdigest()[:20]
     return CACHE / ('claude-process-' + identity + '.json')
 
+def uses_default_claude_auth(process, pid):
+    # A separate CLI can identify the default profile only. Avoid labelling
+    # panes that may use credentials from their environment or project settings.
+    options = (process.get('argv') or [])[1:]
+    if '--' in options:
+        options = options[:options.index('--')]
+    if any(arg.split('=', 1)[0] in ('--settings', '--setting-sources', '--bare', '--add-dir')
+           for arg in options):
+        return False
+    try:
+        proc = Path('/proc') / str(pid)
+        override_keys = {key.encode() for key in CLAUDE_AUTH_ENV}
+        if any(entry.partition(b'=')[0] in override_keys
+               for entry in (proc / 'environ').read_bytes().split(b'\0')):
+            return False
+        cwd = (proc / 'cwd').readlink()
+        for directory in (cwd, *cwd.parents):
+            if directory == Path.home():
+                break  # The auth-status command reads the default user settings.
+            for name in ('settings.json', 'settings.local.json'):
+                try:
+                    fd = os.open(directory / '.claude' / name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                except FileNotFoundError:
+                    continue
+                with os.fdopen(fd, 'rb') as stream:
+                    metadata = os.fstat(stream.fileno())
+                    if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > 65536:
+                        return False
+                    settings = json.loads(stream.read(65537))
+                if not isinstance(settings, dict) or 'apiKeyHelper' in settings:
+                    return False
+                env = settings.get('env', {})
+                if not isinstance(env, dict) or CLAUDE_AUTH_ENV.intersection(env):
+                    return False
+    except (OSError, ValueError):
+        return False
+    return True
+
+def read_claude_account(home):
+    path = f"{Path.home() / '.local/bin'}:/usr/local/bin:/usr/bin:/bin"
+    executable = shutil.which('claude', path=path)
+    if not executable:
+        return None
+    try:
+        result = subprocess.run([executable, 'auth', 'status', '--json'],
+                                cwd='/', capture_output=True, timeout=8, check=True,
+                                env={'HOME': str(Path.home()), 'PATH': path})
+        status = json.loads(result.stdout)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    if (not isinstance(status, dict) or status.get('loggedIn') is not True
+            or status.get('authMethod') != 'claude.ai' or status.get('apiProvider') != 'firstParty'
+            or status.get('configDirectory') != home):
+        return None
+    email = status.get('email')
+    if (isinstance(email, str) and len(email) <= 254 and email.isprintable()
+            and re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', email)):
+        return email
+    return None
+
+def cached_claude_account(home, accounts, now):
+    cached = accounts.get(home, {})
+    checked_at = cached.get('checkedAt', 0)
+    if not number(checked_at) or not 0 <= now - checked_at < 300:
+        cached = {'account': read_claude_account(home), 'checkedAt': now}
+        accounts[home] = cached
+    return cached.get('account')
+
 def bounded_quota(value):
     """Keep all128 pane entries below the sidecar's1MiB cache budget."""
     result = {**value, 'windows': list(value.get('windows', []))}
@@ -249,11 +324,11 @@ def collect(accounts):
         pane_id = pane['pane_id']
         try:
             info = herdr('pane', 'process-info', '--pane', pane_id)['process_info']
-            matches = [p for process in info.get('foreground_processes', [])
+            matches = [(process, p) for process in info.get('foreground_processes', [])
                        if (p := process_profile(process, pane_id))]
             if len(matches) != 1:
                 continue
-            provider, home, pid = matches[0]
+            process, (provider, home, pid) = matches[0]
             if provider == 'codex':
                 cached = accounts.get(home, {})
                 override = CACHE / ('reset-result-' + hashlib.sha256(home.encode()).hexdigest() + '.json')
@@ -288,6 +363,10 @@ def collect(accounts):
                 if value.get('pid') != pid or value.get('processStart', start_time) != start_time:
                     value = {'status': 'Waiting for Claude status line', 'windows': []}
                 value['profile'] = 'Default Claude'
+                if uses_default_claude_auth(process, pid):
+                    account = cached_claude_account(home, accounts, now)
+                    if account:
+                        value['account'] = account
             output[pane_id] = bounded_quota({**value, 'provider': provider})
         except (OSError, ValueError, KeyError, subprocess.SubprocessError):
             continue

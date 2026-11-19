@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -100,6 +101,31 @@ class QuotaTests(unittest.TestCase):
         self.assertEqual(c.claude_windows({}), [])
         result = c.claude_windows({'rate_limits': {'seven_day': {'used_percentage': 22, 'resets_at': 123}}})
         self.assertEqual(result, [{'bucket': 'claude', 'minutes': 10080, 'remaining': 78, 'resetsAt': 123}])
+
+    def test_claude_profile_email_uses_native_auth_status_and_is_cached(self):
+        from types import SimpleNamespace
+        profile = str(Path.home() / '.claude')
+        status = {'loggedIn': True, 'authMethod': 'claude.ai', 'apiProvider': 'firstParty',
+                  'configDirectory': profile, 'email': 'claude@example.test'}
+        accounts = {}
+        with patch.object(c.shutil, 'which', return_value='/usr/local/bin/claude'), patch.object(c.subprocess, 'run') as run:
+            run.return_value = SimpleNamespace(stdout=json.dumps(status))
+            self.assertEqual(c.cached_claude_account(profile, accounts, 1000), 'claude@example.test')
+            self.assertEqual(c.cached_claude_account(profile, accounts, 1000), 'claude@example.test')
+            self.assertEqual(c.cached_claude_account(profile, accounts, 1299), 'claude@example.test')
+            run.assert_called_once()
+            self.assertEqual(run.call_args.args[0], ['/usr/local/bin/claude', 'auth', 'status', '--json'])
+            status['authMethod'] = 'api_key'
+            run.return_value = SimpleNamespace(stdout=json.dumps(status))
+            self.assertIsNone(c.cached_claude_account(profile, accounts, 1300))
+            self.assertEqual(run.call_count, 2)
+
+    def test_claude_label_is_omitted_when_the_pane_can_override_auth(self):
+        with patch.object(c.Path, 'read_bytes', return_value=b'CLAUDE_CODE_OAUTH_TOKEN=synthetic\0'):
+            self.assertFalse(c.uses_default_claude_auth({'argv': ['claude']}, 123))
+        with patch.object(c.Path, 'read_bytes', return_value=b''), patch.object(c.Path, 'readlink', return_value=Path.home()):
+            self.assertTrue(c.uses_default_claude_auth({'argv': ['claude', '--resume', 'fixture']}, 123))
+            self.assertFalse(c.uses_default_claude_auth({'argv': ['claude', '--settings=fixture.json']}, 123))
 
     def test_credit_balances_and_reset_inventory_keep_unknown_distinct_from_zero(self):
         home = '/profile'

@@ -88,27 +88,62 @@ export default function UsageIndicator({ paneId }: { paneId: string }) {
   const resetting = useRef(false);
   const alive = useRef(true);
   const activePane = useRef(paneId);
-  useEffect(() => { activePane.current = paneId; setSelection(null); setResetStatus(""); setQuota(null); }, [paneId]);
-  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const [quota, setQuota] = useState<Quota | null>(null);
   const [revision, setRevision] = useState(0);
+  const [checkResult, setCheckResult] = useState<string | null>("");
+  const checkBaseline = useRef<number | undefined>(undefined);
   const [now, setNow] = useState(Date.now() / 1000);
   useEffect(() => {
+    activePane.current = paneId;
+    checkBaseline.current = undefined;
+    setSelection(null);
+    setResetStatus("");
+    setCheckResult("");
+    setQuota(null);
+  }, [paneId]);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  useEffect(() => {
     const abort = new AbortController();
-    const refresh = () => {
-      if (document.hidden) return;
+    let fetching = false;
+    const refresh = async () => {
+      if (document.hidden || fetching) return;
       setNow(Date.now() / 1000);
-      void outputJson<Quota>(`usage?${new URLSearchParams({ pane: paneId })}`, abort.signal)
-        .then(value => { if (!abort.signal.aborted) setQuota(previous =>
-          previous?.accountKey && previous.accountKey === value.accountKey && (previous.observedAt ?? 0) > (value.observedAt ?? 0) ? previous : value); })
-        .catch(() => { if (!abort.signal.aborted) setQuota({ status: "Quota unavailable", windows: [] }); });
+      fetching = true;
+      const baseline = checkBaseline.current;
+      const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(8000)]);
+      try {
+        const value = await outputJson<Quota>(`usage?${new URLSearchParams({ pane: paneId })}`, signal);
+        if (abort.signal.aborted) return;
+        setQuota(previous =>
+          previous?.accountKey && previous.accountKey === value.accountKey && (previous.observedAt ?? 0) > (value.observedAt ?? 0) ? previous : value);
+        if (baseline !== undefined) {
+          if (value.status !== "ok") setCheckResult("");
+          else if ((value.observedAt ?? 0) > baseline) setCheckResult("Newer usage sample loaded.");
+          else setCheckResult("No newer usage sample reported.");
+        } else setCheckResult("");
+      } catch {
+        if (abort.signal.aborted) return;
+        setQuota(previous => ({ ...previous, status: "Quota unavailable", windows: previous?.windows ?? [] }));
+        if (baseline !== undefined) setCheckResult("Couldn’t check usage. Try again.");
+      } finally {
+        if (!abort.signal.aborted) checkBaseline.current = undefined;
+        fetching = false;
+      }
     };
-    refresh();
+    void refresh();
     const interval = window.setInterval(refresh, 30000);
     document.addEventListener("visibilitychange", refresh);
     return () => { abort.abort(); window.clearInterval(interval); document.removeEventListener("visibilitychange", refresh); };
   }, [paneId, revision]);
+  const checkingUsage = checkResult === null;
+  const checkUsage = () => {
+    checkBaseline.current = quota?.observedAt ?? 0;
+    setCheckResult(null);
+    setRevision(value => value + 1);
+  };
   const provider = quota?.provider === "claude" ? "Claude" : quota?.provider === "codex" ? "Codex" : "Usage";
+  const claude = provider === "Claude";
+  const credits = quota?.credits ?? [];
   const compact = quota ? compactQuotaWindow(quota) : undefined;
   const stale = Boolean(quota && compact && quotaStale(quota, compact, now));
   const awaiting = awaitingClaudeQuota(quota);
@@ -154,43 +189,57 @@ export default function UsageIndicator({ paneId }: { paneId: string }) {
       }
     } finally { resetting.current = false; if (alive.current) setResetBusy(false); }
   };
-  const content = <div ref={panel} className={`usage-details${mobile ? " usage-details-mobile" : ""}`} style={mobile ? bounds : undefined}
+  const content = <div ref={panel} className={`usage-details${mobile ? " usage-details-mobile" : ""}${claude ? " usage-details-claude" : ""}`} style={mobile ? bounds : undefined}
     role="region" aria-label={`${provider} usage details`}>
-      <strong>{quota?.account ?? "Account usage"}</strong>
-      {quota?.profile && <div>{quota.profile} · profile allowance</div>}
+      <strong>{quota?.account ?? (claude ? "Claude · current session" : "Account usage")}</strong>
+      {!claude && quota?.profile && <div>{quota.profile} · profile allowance</div>}
       {quota?.windows?.map((w, i) => <div className="usage-window" key={i}>
-        <div>{w.bucket} · {quotaLabel(w.minutes)}: {Math.round(w.remaining)}% remaining{quotaStale(quota, w, now) ? " · stale" : ""}</div>
+        <div>{!claude && `${w.bucket} · `}{quotaLabel(w.minutes)}: {Math.round(w.remaining)}% remaining{quotaStale(quota, w, now) ? " · stale" : ""}</div>
         <meter min={0} max={100} value={w.remaining} aria-label={`${w.bucket} ${quotaLabel(w.minutes)} remaining`} />
-        <small>{w.resetsAt ? `Resets ${new Date(w.resetsAt * 1000).toLocaleString()}` : "Reset time not reported"}</small>
+        {!claude && <small>{w.resetsAt ? `Resets ${new Date(w.resetsAt * 1000).toLocaleString()}` : "Reset time not reported"}</small>}
       </div>)}
-      <div className="usage-window"><strong>Credits</strong>
-        {quota?.credits?.length ? quota.credits.map(credit => <div key={credit.bucket}>{credit.bucket}: {credit.unlimited ? "Unlimited" :
-          credit.balance !== null ? `${credit.balance} remaining` : credit.hasCredits ? "Available; balance not reported" : "No credits available"}</div>) :
-          <p>Credit balance not reported{quota?.provider === "claude" ? " by Claude Code" : " by the provider"}.</p>}
-      </div>
-      <div className="usage-window"><strong>Banked resets</strong>
-        {quota?.bankedResets ? <>
-          <p>{quota.bankedResets.availableCount} available</p>
-          {!quota.accountKey && quota.bankedResets.availableCount > 0 && <p>Use the Codex Usage page to apply a reset for this account.</p>}
-          {quota.bankedResets.credits?.map(credit => <div className="usage-reset" key={credit.id}>
-            <div>{credit.title}</div><small>{!credit.expiryKnown ? "Expiry not reported" : credit.expiresAt === null ? "No expiry" :
-              `${credit.expiresAt <= now ? "Expired" : "Expires"} ${new Date(credit.expiresAt * 1000).toLocaleString()}`}</small>
-            <button type="button" disabled={!canReset || resetBusy || credit.status !== "available" || credit.resetType !== "codexRateLimits" ||
-              credit.expiresAt !== null && credit.expiresAt <= now} onClick={() => chooseReset(credit)}>Use reset</button>
-          </div>)}
-          {quota.bankedResets.availableCount > (quota.bankedResets.credits?.length ?? 0) && <>
-            <p>Individual details are not available for every reset.</p>
-            <button type="button" disabled={!canReset || resetBusy} onClick={() => chooseReset(null)}>Use next available reset</button>
-          </>}
-        </> : <p>{quota?.provider === "claude" ? "Claude Code does not report banked resets or expiry dates." : "Banked resets not reported by the provider."}</p>}
-      </div>
-      {quota?.provider === "claude" && <a href="https://claude.ai/settings/usage" target="_blank" rel="noopener noreferrer">View credits / use a reset in Claude</a>}
-      {quota?.provider === "codex" && <a href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noopener noreferrer">Manage Codex usage</a>}
+      {!claude && <>
+        <div className="usage-window">
+          {credits.length ? credits.map(credit => <div key={credit.bucket}>
+            <strong>{credits.length > 1 && credit.bucket !== "codex" ? `Credits (${credit.bucket}):` : "Credits:"}</strong>{" "}
+            {credit.unlimited ? "Unlimited" : credit.balance !== null ? Math.floor(Number(credit.balance)) :
+              credit.hasCredits ? "Balance not reported" : "None available"}
+          </div>) : <><strong>Credits:</strong> Balance not reported</>}
+        </div>
+        <div className="usage-window"><strong>Banked resets</strong>
+          {quota?.bankedResets ? <>
+            {quota.bankedResets.availableCount === 0 && !quota.bankedResets.credits?.length && <p>No banked resets.</p>}
+            {!quota.accountKey && quota.bankedResets.availableCount > 0 && <p>Use the Codex Usage page to apply a reset for this account.</p>}
+            {quota.bankedResets.credits?.map(credit => {
+              const expiry = credit.expiresAt === null ? null : new Date(credit.expiresAt * 1000);
+              return <div className="usage-reset" key={credit.id}>
+                <div>{credit.title}</div>
+                <div className="usage-reset-actions">
+                  <button type="button" disabled={!canReset || resetBusy || credit.status !== "available" || credit.resetType !== "codexRateLimits" ||
+                    credit.expiresAt !== null && credit.expiresAt <= now} onClick={() => chooseReset(credit)}>Use reset</button>
+                  <small title={credit.expiryKnown ? expiry?.toLocaleString() : undefined}>
+                    {!credit.expiryKnown ? "Expiry not reported" : !expiry ? "No expiry" :
+                      `${expiry.getTime() <= now * 1000 ? "Expired" : "Expires"} ${expiry.toLocaleDateString()}`}
+                  </small>
+                </div>
+              </div>;
+            })}
+            {quota.bankedResets.availableCount > (quota.bankedResets.credits?.length ?? 0) && <>
+              <p>Individual details are not available for every reset.</p>
+              <button type="button" disabled={!canReset || resetBusy} onClick={() => chooseReset(null)}>Use next available reset</button>
+            </>}
+          </> : <p>Banked resets not reported by the provider.</p>}
+        </div>
+      </>}
       {resetStatus && <p role="status">{resetStatus}</p>}
-      <p>{quota?.status === "ok" ? "Reported by the provider; shared across sessions using this account." : quota?.status ?? "Loading quota…"}</p>
-      {quota?.observedAt && <small>Last observed {new Date(quota.observedAt * 1000).toLocaleString()}</small>}
-      <p className="usage-note">Codex refreshes every 5 minutes. Claude updates after responses; missing limits are not estimated.</p>
-      <button type="button" onClick={() => setRevision(v => v + 1)}>Refresh display</button>
+      {quota?.status !== "ok" && !checkResult && <p>{awaiting ? "Awaiting response" : quota?.status ?? "Loading quota…"}</p>}
+      <div className="usage-actions">
+        {claude && <a href="https://claude.ai/settings/usage" target="_blank" rel="noopener noreferrer">Open Claude usage</a>}
+        {provider === "Codex" && <a href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noopener noreferrer">Manage Codex usage</a>}
+        <button type="button" disabled={checkingUsage} onClick={checkUsage}>{checkingUsage ? "Checking…" : "Refresh"}</button>
+      </div>
+      {claude && <small className="usage-note">See remaining credits and resets on Claude’s website.</small>}
+      <div className="usage-note" role="status">{checkingUsage ? "Checking the latest sample…" : checkResult}</div>
     </div>;
   const confirmation = selection && <div className="usage-reset-confirmation"><ConfirmDialog title={selection.retry ? "Retry the same reset attempt?" : "Use one banked reset?"}
     message={selection.retry ? `${selection.error ? `${selection.error}\n\n` : ""}The previous result was not confirmed. Retrying uses the same request ID, so it cannot redeem another reset.` :
