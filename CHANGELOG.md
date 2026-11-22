@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Show the reported reset time under each Claude usage meter.
 - Show refresh progress and results in the usage window. Keep the last reading marked stale when a check fails.
 - Show Claude sign-in links, including the current `claude.com/cai/oauth/authorize` flow, as ordinary Conversation text. Allow mouse selection in Terminal even when Claude captures clicks; preserve complete wrapped login URLs when copying or opening them.
 

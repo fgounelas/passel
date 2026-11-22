@@ -150,8 +150,9 @@ this document when an intentional design decision changes these conventions.
   APIs, offer their official Usage page instead of inventing balances or resets.
   Keep same-attempt retry inside the reset confirmation; omit a separate previous-
   attempt action from the usage popover.
-- The Claude popover shows one account heading, the reported allowance meters,
-  Refresh, and a link to Claude usage for credits and resets. Use the signed-in
+- The Claude popover shows one account heading, the reported allowance meters
+  with local reset times when available, Refresh, and a link to Claude usage
+  for credits and banked resets. Use the signed-in
   profile email when available. In Codex, place each banked reset's expiry beside
   its button and allow the row to wrap on narrow screens.
 - Refresh rereads the server's latest usage sample immediately and reports when

@@ -196,7 +196,9 @@ export default function UsageIndicator({ paneId }: { paneId: string }) {
       {quota?.windows?.map((w, i) => <div className="usage-window" key={i}>
         <div>{!claude && `${w.bucket} · `}{quotaLabel(w.minutes)}: {Math.round(w.remaining)}% remaining{quotaStale(quota, w, now) ? " · stale" : ""}</div>
         <meter min={0} max={100} value={w.remaining} aria-label={`${w.bucket} ${quotaLabel(w.minutes)} remaining`} />
-        {!claude && <small>{w.resetsAt ? `Resets ${new Date(w.resetsAt * 1000).toLocaleString()}` : "Reset time not reported"}</small>}
+        {w.resetsAt ? <small>{`${w.resetsAt <= now ? "Reset was" : "Resets"} ${new Date(w.resetsAt * 1000).toLocaleString(undefined, {
+          dateStyle: "medium", timeStyle: "short",
+        })}`}</small> : !claude && <small>Reset time not reported</small>}
       </div>)}
       {!claude && <>
         <div className="usage-window">

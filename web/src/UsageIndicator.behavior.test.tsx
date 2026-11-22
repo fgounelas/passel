@@ -17,7 +17,7 @@ it("reports a manual check against an unchanged Claude sample and picks up fresh
   vi.useFakeTimers();
   let sample: Quota = {provider: "claude", account: "claude@example.test", profile: "Default Claude",
     status: "ok", observedAt: Date.now() / 1000 - 3600, windows: [
-      {bucket: "claude", minutes: 10080, remaining: 55, resetsAt: null},
+      {bucket: "claude", minutes: 10080, remaining: 55, resetsAt: Date.now() / 1000 + 86400},
       {bucket: "claude", minutes: 300, remaining: 80, resetsAt: null},
     ]};
   const response = () => new Response(JSON.stringify(sample));
@@ -31,6 +31,10 @@ it("reports a manual check against an unchanged Claude sample and picks up fresh
     const details = host.querySelector(".usage-details")!;
     expect(details.querySelector("strong")?.textContent).toBe("claude@example.test");
     expect(details.querySelectorAll("meter")).toHaveLength(2);
+    const [weekly, hourly] = details.querySelectorAll(".usage-window");
+    expect(weekly.querySelector("small")?.textContent).toBe(`Resets ${new Date(sample.windows[0].resetsAt! * 1000)
+      .toLocaleString(undefined, {dateStyle: "medium", timeStyle: "short"})}`);
+    expect(hourly.querySelector("small")).toBeNull();
     expect(details.textContent).not.toMatch(/profile allowance|Last observed|Reset time not reported/);
     expect(details.textContent).toContain("See remaining credits and resets");
     let finish!: (value: Response) => void;
