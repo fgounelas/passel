@@ -13,6 +13,11 @@ AI agents on a mathematical problem and eventually write it up as a paper for pu
 these apps are terminal based, Passel provides a graphical user interface to interact with them,
 view their output and detach/reattach a working session.
 
+![Pharos workflow. The main agent assigns work to proof workers, who submit to an independent verifier and revise from its feedback. Accepted proofs enter a fact graph that feeds drafting and review before the paper PDF.](docs/pharos-workflow.png)
+
+This diagram illustrates [FrenzyMath’s Pharos workflow](https://github.com/frenzymath/Pharos/blob/main/docs/architecture.md),
+which you can follow in Passel.
+
 Use it to work on several problems concurrently while the agents continue their
 proof attempts in the background. Review their arguments, ask for the current
 strategy or a progress report, and request a readable summary or a paper draft.
@@ -56,6 +61,15 @@ the discussions, saved statements and written proofs together. The sample-projec
 and mobile screenshots use fictional project data.
 
 ![A Pharos conversation, expanded project files, and the cubic-surface proof PDF side by side](docs/screenshots/pharos-files-pdf.png)
+
+<details>
+<summary>Terminal mode while Codex is working</summary>
+
+This Gruvbox Dark capture uses scripted Codex output from the Pharos example.
+
+![Passel Terminal mode showing Codex checking the proof that a smooth cubic surface has 27 lines](docs/screenshots/pharos-terminal-working.png)
+
+</details>
 
 <details>
 <summary>Conversations and progress reports</summary>

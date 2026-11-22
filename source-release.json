@@ -34,6 +34,7 @@
     "docs/usage-counter.md",
     "docs/source-release.md",
     "docs/docker.md",
+    "docs/pharos-workflow.png",
     "docs/screenshots/*.png",
     "examples/launcher-presets.json",
     "web/.gitignore",
