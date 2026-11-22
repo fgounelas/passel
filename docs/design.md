@@ -206,6 +206,7 @@ actual visual verification when reporting results.
   uses the same safe renderer and Source option as project Markdown.
 - Refresh listings in place; never remount the tree on a polling tick or steal
   focus. Poll only while Files is visible, and preserve open document contents.
+- Expanded empty folders show no child rows after loading.
 - Text, code, data and notebook uploads display literal source; do not execute
   code or notebook output. Images and DjVu get a download-only explanation and
   do not fetch/decode in the viewer. Keep Markdown on its safe renderer.

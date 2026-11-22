@@ -141,7 +141,6 @@ export function OutputFileTree({ root, selectedPath, reveal, collapse, onPreview
       </button>
       {row.open && !listings[row.path] && <p className="output-tree-status" role="status">Loading…</p>}
       {row.open && listings[row.path]?.error && <p className="output-tree-status" role="alert">{listings[row.path].error}</p>}
-      {row.open && listings[row.path]?.entries?.length === 0 && <p className="output-tree-status">Empty folder</p>}
     </div>)}
   </div>;
 }

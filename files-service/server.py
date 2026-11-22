@@ -23,7 +23,7 @@ from cli_setup import CliSetup
 from urllib.parse import parse_qs, quote, urlsplit
 
 OUTPUTS = {'paper', 'papers', 'facts', 'report', 'reports', 'notes', 'plans', 'ops', 'audits', 'advisories', 'research'}
-PHAROS_OUTPUTS = OUTPUTS | {'human_report', 'worker_report', 'checkpoints', 'materials', 'expert_guidance'}
+PHAROS_OUTPUTS = OUTPUTS | {'human_report', 'worker_report', 'checkpoints', 'materials', 'expert_guidance', 'workers'}
 EXTENSIONS = {'.pdf', '.tex', '.md'}
 LEAN_EXTENSIONS = EXTENSIONS | {'.lean', '.txt'}
 LEAN_PROJECT_FILES = {'lakefile.toml', 'lake-manifest.json', 'lean-toolchain'}
@@ -109,12 +109,21 @@ def components(path, output_scope=True, workspace=None):
     if len(parts) > 24 or any(not p or p.startswith('.') or '\\' in p or '\x00' in p for p in parts):
         raise ValueError('Invalid path')
     if output_scope and len(parts) >= 2:
-        if parts[1] == 'fact_graph':
+        if parts[1] == 'workers':
+            if (workspace != 'pharos' or len(parts) > 4
+                    or (len(parts) >= 3 and not worker_name(parts[2]))
+                    or (len(parts) == 4 and parts[3] != 'TASK.md')):
+                raise ValueError('Not a worker assignment')
+        elif parts[1] == 'fact_graph':
             if len(parts) >= 3 and parts[2] != 'facts':
                 raise ValueError('Not a facts directory')
         elif parts[1] not in output_directories(workspace) and not (len(parts) == 2 and project_document(parts[1], workspace)):
             raise ValueError('Not an output directory')
     return parts
+
+
+def worker_name(name):
+    return re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,79}', name) is not None
 
 
 class Files:
@@ -241,6 +250,8 @@ class Files:
                 raise ValueError('Virtual directory')
             root, path = target
         parts = components(path, output_scope=root != 'lean', workspace=root)
+        if root == 'pharos' and parts[1:2] == ['workers'] and directory != (len(parts) < 4):
+            raise ValueError('Not a worker assignment')
         if root == 'lean' and not lean_path(parts, directory):
             raise ValueError('Not a Lean source or document')
         if root != 'lean' and directory and len(parts) == 2 and project_document(parts[1], root):
@@ -328,6 +339,11 @@ class Files:
                                            (stat.S_ISREG(info.st_mode) and project_document(entry.name, root))):
                         continue
                     if depth == 2 and parts[1] == 'fact_graph' and (not directory or entry.name != 'facts'):
+                        continue
+                    if parts[1:2] == ['workers'] and (
+                        (depth == 2 and not (directory and worker_name(entry.name))) or
+                        (depth == 3 and not (stat.S_ISREG(info.st_mode) and entry.name == 'TASK.md'))
+                    ):
                         continue
                     if depth >= 2 and not directory and (
                         not stat.S_ISREG(info.st_mode) or PurePosixPath(entry.name).suffix.lower() not in EXTENSIONS

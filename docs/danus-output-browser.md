@@ -16,7 +16,8 @@ are not listed.
 
 Workflow views expose approved paper, fact, report, note, plan and audit folders,
 including `fact_graph/facts`, root `PROBLEM.md` and dated run records. Configured
-Pharos views also include reports, checkpoints, materials, guidance and `ROUTES.md`.
+Pharos views also include reports, checkpoints, materials, guidance, `ROUTES.md`
+and worker assignments at `workers/<worker>/TASK.md`. Other worker files stay hidden.
 Workflow credentials and unrelated runtime state stay excluded.
 
 PDF uses bundled PDF.js with bounded canvas rendering. Markdown supports GFM and

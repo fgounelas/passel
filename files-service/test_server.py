@@ -214,13 +214,33 @@ class FileTests(unittest.TestCase):
             path = self.root / 'project' / folder
             path.mkdir(exist_ok=True)
             (path / 'private.md').write_text('private')
+        worker = self.root / 'project/workers/worker-one'
+        worker.mkdir()
+        (worker / 'TASK.md').write_text('Check the normal-bundle proof.')
+        (worker / 'scratch.md').write_text('private')
+        (worker / 'local_memory').mkdir()
+        (worker / 'local_memory/note.md').write_text('private')
+        (worker.parent / 'alias').symlink_to(worker, target_is_directory=True)
         files = Files({'danus': str(self.root), 'pharos': str(self.root)})
         try:
             self.assertEqual([e['name'] for e in files.listing('work', '')], ['danus', 'pharos'])
             self.assertEqual([e['name'] for e in files.listing('work', 'pharos/runtime')], ['projects'])
             visible = {e['name'] for e in files.listing('work', 'pharos/runtime/projects/project')}
             self.assertEqual(visible, {'human_report', 'worker_report', 'checkpoints', 'materials',
-                                       'expert_guidance', 'fact_graph', 'papers', 'PROBLEM.md', 'ROUTES.md'})
+                                       'expert_guidance', 'fact_graph', 'papers', 'PROBLEM.md', 'ROUTES.md', 'workers'})
+            assignments = 'pharos/runtime/projects/project/workers'
+            self.assertEqual([e['name'] for e in files.listing('work', assignments)], ['worker-one'])
+            self.assertEqual([e['name'] for e in files.listing('work', assignments + '/worker-one')], ['TASK.md'])
+            with os.fdopen(files.open('work', assignments + '/worker-one/TASK.md')) as opened:
+                self.assertEqual(opened.read(), 'Check the normal-bundle proof.')
+            self.assertIn(assignments + '/worker-one/TASK.md',
+                          {e['path'] for e in files.search('work', 'TASK.md')['entries']})
+            for path in [assignments + suffix for suffix in ['/private.md', '/worker-one/scratch.md',
+                                                            '/worker-one/local_memory/note.md', '/alias/TASK.md']]:
+                with self.subTest(path=path), self.assertRaises((ValueError, OSError)):
+                    files.open('work', path)
+            with self.assertRaises(ValueError):
+                files.open('danus', 'project/workers/worker-one/TASK.md')
             for folder in folders:
                 path = 'pharos/runtime/projects/project/' + folder
                 self.assertEqual([e['name'] for e in files.listing('work', path)], ['result.md'])
