@@ -14,8 +14,10 @@ containing `danus`, `pharos` or `rethlas` use configured, filtered project-outpu
 views. Dotfiles, symlinks and special files are excluded. Work-root loose files
 are not listed.
 
-Workflow views expose approved paper, fact, report, note, plan and audit folders,
-including `fact_graph/facts`, root `PROBLEM.md` and dated run records. Configured
+Workflow views expose approved paper, fact, report, note, plan, audit and
+literature and import folders, including `fact_graph/facts`, root `PROBLEM.md`
+and dated run records. The `literature/` and `imports/` folders support plain text
+(`.txt`) alongside PDF, TeX and Markdown.
 Pharos views also include reports, checkpoints, materials, guidance, `ROUTES.md`
 and worker assignments at `workers/<worker>/TASK.md`. Other worker files stay hidden.
 Workflow credentials and unrelated runtime state stay excluded.

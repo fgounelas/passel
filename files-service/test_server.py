@@ -201,7 +201,7 @@ class FileTests(unittest.TestCase):
 
     def test_pharos_outputs_use_the_shared_tree_search_and_secure_document_policy(self):
         folders = ['human_report/md', 'human_report/pdf', 'worker_report/xhigh',
-                   'checkpoints', 'materials', 'expert_guidance', 'fact_graph/facts']
+                   'checkpoints', 'materials', 'expert_guidance', 'fact_graph/facts', 'literature', 'imports']
         for folder in folders:
             path = self.root / 'project' / folder
             path.mkdir(parents=True, exist_ok=True)
@@ -210,7 +210,7 @@ class FileTests(unittest.TestCase):
             (path / 'alias.md').symlink_to(self.root / 'secret.md')
         (self.root / 'project/ROUTES.md').write_text('Research routes')
         (self.root / 'project/PROBLEM.md').write_text('Research problem')
-        for folder in ['workers', 'reporter', 'chat', 'computation', 'literature', 'global_memory', '.codex-home']:
+        for folder in ['workers', 'reporter', 'chat', 'computation', 'global_memory', '.codex-home']:
             path = self.root / 'project' / folder
             path.mkdir(exist_ok=True)
             (path / 'private.md').write_text('private')
@@ -227,7 +227,7 @@ class FileTests(unittest.TestCase):
             self.assertEqual([e['name'] for e in files.listing('work', 'pharos/runtime')], ['projects'])
             visible = {e['name'] for e in files.listing('work', 'pharos/runtime/projects/project')}
             self.assertEqual(visible, {'human_report', 'worker_report', 'checkpoints', 'materials',
-                                       'expert_guidance', 'fact_graph', 'papers', 'PROBLEM.md', 'ROUTES.md', 'workers'})
+                                       'expert_guidance', 'fact_graph', 'papers', 'PROBLEM.md', 'ROUTES.md', 'workers', 'literature', 'imports'})
             assignments = 'pharos/runtime/projects/project/workers'
             self.assertEqual([e['name'] for e in files.listing('work', assignments)], ['worker-one'])
             self.assertEqual([e['name'] for e in files.listing('work', assignments + '/worker-one')], ['TASK.md'])
@@ -251,13 +251,25 @@ class FileTests(unittest.TestCase):
                         files.open('work', path + '/' + name)
             self.assertEqual({e['path'] for e in files.search('pharos', 'result')['entries']},
                              {'project/' + folder + '/result.md' for folder in folders})
+            for folder in ('project/literature', 'project/imports'):
+                text_path = folder + '/extracted.txt'
+                (self.root / text_path).write_text('Extracted source text.')
+                for workflow in ('danus', 'pharos'):
+                    self.assertIn(text_path, {e['path'] for e in files.search(workflow, 'extracted')['entries']})
+                    with os.fdopen(files.open(workflow, text_path)) as opened:
+                        self.assertEqual(opened.read(), 'Extracted source text.')
+                    self.assertIn('extracted.txt', {e['name'] for e in files.listing(workflow, folder)})
+            (self.root / 'project/papers/extracted.txt').write_text('Other project text')
+            with self.assertRaises(ValueError):
+                files.open('pharos', 'project/papers/extracted.txt')
             self.assertIn('pharos/runtime/projects/project/ROUTES.md',
                           {e['path'] for e in files.search('work', 'ROUTES')['entries']})
             for path in ['project/ROUTES.md', 'project/materials/result.md', 'project/worker_report/xhigh/result.md']:
                 with self.assertRaises(ValueError):
                     files.open('danus', path)
             for path in ['pharos/config', 'pharos/runtime/codex-npm',
-                         'pharos/runtime/projects/project/literature/private.md',
+                         'pharos/runtime/projects/project/literature/.private.md',
+                         'pharos/runtime/projects/project/imports/.private.md',
                          'pharos/runtime/projects/project/.codex-home/private.md',
                          'pharos/runtime/projects/project/chat/private.md',
                          'pharos/runtime/projects/project/AGENTS.md',

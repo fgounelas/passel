@@ -6,6 +6,7 @@
 
 ### Added
 
+- Make project `literature/` and `imports/` folders browsable and searchable in Files, including plain text files.
 ### Changed
 
 - Simplify Claude and Codex usage popovers, show the signed-in Claude account when available, and place Codex credits and reset expiry dates inline.

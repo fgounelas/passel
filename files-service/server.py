@@ -22,9 +22,10 @@ from setup import Setup, SetupError
 from cli_setup import CliSetup
 from urllib.parse import parse_qs, quote, urlsplit
 
-OUTPUTS = {'paper', 'papers', 'facts', 'report', 'reports', 'notes', 'plans', 'ops', 'audits', 'advisories', 'research'}
+OUTPUTS = {'paper', 'papers', 'facts', 'report', 'reports', 'notes', 'plans', 'ops', 'audits', 'advisories', 'research', 'literature', 'imports'}
 PHAROS_OUTPUTS = OUTPUTS | {'human_report', 'worker_report', 'checkpoints', 'materials', 'expert_guidance', 'workers'}
 EXTENSIONS = {'.pdf', '.tex', '.md'}
+EXTENSIONS_WITH_TEXT = EXTENSIONS | {'.txt'}
 LEAN_EXTENSIONS = EXTENSIONS | {'.lean', '.txt'}
 LEAN_PROJECT_FILES = {'lakefile.toml', 'lake-manifest.json', 'lean-toolchain'}
 LEAN_EXCLUDED_DIRS = {'build', 'dist', 'target', 'node_modules', 'vendor', 'packages', 'cache'}
@@ -84,6 +85,10 @@ def project_document(name, workspace=None):
 
 def output_directories(workspace):
     return PHAROS_OUTPUTS if workspace == 'pharos' else OUTPUTS
+
+
+def output_extensions(parts):
+    return EXTENSIONS_WITH_TEXT if len(parts) >= 2 and parts[1] in ('literature', 'imports') else EXTENSIONS
 
 
 def workflow_directory(name):
@@ -256,7 +261,7 @@ class Files:
             raise ValueError('Not a Lean source or document')
         if root != 'lean' and directory and len(parts) == 2 and project_document(parts[1], root):
             raise ValueError('Not an output directory')
-        if root != 'lean' and not directory and ((len(parts) < 3 and not (len(parts) == 2 and project_document(parts[1], root))) or PurePosixPath(path).suffix.lower() not in EXTENSIONS):
+        if root != 'lean' and not directory and ((len(parts) < 3 and not (len(parts) == 2 and project_document(parts[1], root))) or PurePosixPath(path).suffix.lower() not in output_extensions(parts)):
             raise ValueError('Unsupported file')
         fd = open_beneath(self.root_fd(root), parts, directory)
         try:
@@ -346,7 +351,7 @@ class Files:
                     ):
                         continue
                     if depth >= 2 and not directory and (
-                        not stat.S_ISREG(info.st_mode) or PurePosixPath(entry.name).suffix.lower() not in EXTENSIONS
+                        not stat.S_ISREG(info.st_mode) or PurePosixPath(entry.name).suffix.lower() not in output_extensions(parts)
                     ):
                         continue
                     result.append({'name': entry.name, 'directory': directory,
